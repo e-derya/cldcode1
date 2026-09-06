@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Barcelona Aile Gezisi</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<style>
+  :root{
+    --bg:#FBF3E7;
+    --paper:#FFFFFF;
+    --ink:#3A2E28;
+    --muted:#8C7B72;
+    --line:#EBDFCF;
+    --terracotta:#E0654A;
+    --terracotta-dark:#C74E36;
+    --sand-dark:#F2E3CC;
+    --blue:#2E6F95;
+    --green:#3F8F5F;
+    --orange:#EA9A3E;
+    --red:#C0392B;
+    --shadow:0 4px 14px rgba(58,46,40,0.12);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size:17px;
+    line-height:1.4;
+    display:flex;
+    flex-direction:column;
+    min-height:100vh;
+    overscroll-behavior-y: none;
+  }
+
+  header{
+    background:linear-gradient(135deg, var(--terracotta), var(--terracotta-dark));
+    color:#fff;
+    padding:14px 16px 0 16px;
+    flex:0 0 auto;
+  }
+  header h1{
+    margin:0 0 2px 0;
+    font-size:1.5rem;
+    font-weight:800;
+    letter-spacing:.2px;
+  }
+  header p.sub{
+    margin:0 0 12px 0;
+    font-size:.95rem;
+    opacity:.92;
+  }
+
+  .day-tabs{
+    display:flex;
+    gap:8px;
+    padding-bottom:10px;
+  }
+  .day-tab{
+    flex:1;
+    border:none;
+    border-radius:14px 14px 0 0;
+    background:rgba(255,255,255,0.22);
+    color:#fff;
+    padding:14px 10px;
+    font-size:1.05rem;
+    font-weight:700;
+    cursor:pointer;
+    min-height:50px;
+    transition:background .15s ease, color .15s ease;
+  }
+  .day-tab small{
+    display:block;
+    font-weight:500;
+    font-size:.78rem;
+    opacity:.85;
+    margin-top:2px;
+  }
+  .day-tab.active{
+    background:var(--bg);
+    color:var(--terracotta-dark);
+  }
+  .day-tab.active small{ color:var(--muted); opacity:1; }
+
+  .toolbar{
+    background:var(--paper);
+    border-bottom:1px solid var(--line);
+    padding:10px 12px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    align-items:center;
+    flex:0 0 auto;
+  }
+  .search-box{
+    flex:1 1 220px;
+    position:relative;
+  }
+  .search-box input{
+    width:100%;
+    padding:12px 14px 12px 38px;
+    border-radius:12px;
+    border:1.5px solid var(--line);
+    font-size:1rem;
+    background:var(--bg);
+    color:var(--ink);
+    min-height:44px;
+  }
+  .search-box input:focus{
+    outline:none;
+    border-color:var(--terracotta);
+  }
+  .search-box::before{
+    content:"🔍";
+    position:absolute;
+    left:12px;
+    top:50%;
+    transform:translateY(-50%);
+    font-size:1rem;
+    opacity:.6;
+  }
+  .filter-chips{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+  }
+  .chip{
+    border:1.5px solid var(--line);
+    background:var(--bg);
+    color:var(--ink);
+    padding:10px 14px;
+    border-radius:999px;
+    font-size:.9rem;
+    font-weight:600;
+    cursor:pointer;
+    white-space:nowrap;
+    min-height:44px;
+  }
+  .chip.active{
+    background:var(--terracotta);
+    border-color:var(--terracotta);
+    color:#fff;
+  }
+
+  .legend{
+    display:flex;
+    gap:14px;
+    flex-wrap:wrap;
+    padding:8px 12px;
+    background:var(--sand-dark);
+    font-size:.8rem;
+    color:var(--muted);
+    flex:0 0 auto;
+  }
+  .legend span{display:flex; align-items:center; gap:5px;}
+  .dot{width:11px; height:11px; border-radius:50%; display:inline-block; flex:0 0 auto;}
+
+  main{
+    flex:1 1 auto;
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+  }
+  @media (min-width: 880px){
+    main{ flex-direction:row; }
+    .map-wrap{ flex:1 1 55%; }
+    .list-wrap{ flex:1 1 45%; border-top:none; border-left:1px solid var(--line); }
+  }
+
+  .map-wrap{
+    position:relative;
+    flex:0 0 42vh;
+    min-height:260px;
+  }
+  #map{
+    width:100%;
+    height:100%;
+    background:#dfe9ee;
+  }
+
+  .list-wrap{
+    flex:1 1 auto;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    background:var(--bg);
+    border-top:1px solid var(--line);
+    padding:10px 10px 30px 10px;
+  }
+  .empty-msg{
+    text-align:center;
+    color:var(--muted);
+    padding:40px 20px;
+    font-size:1rem;
+  }
+
+  .card{
+    background:var(--paper);
+    border-radius:16px;
+    box-shadow:var(--shadow);
+    padding:12px 14px;
+    margin-bottom:12px;
+    border:2px solid transparent;
+    cursor:pointer;
+    transition:border-color .15s ease, transform .1s ease;
+  }
+  .card.active{
+    border-color:var(--terracotta);
+    transform:scale(1.01);
+  }
+  .card.done{
+    opacity:.55;
+  }
+  .card-top{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+  }
+  .badge-num{
+    flex:0 0 auto;
+    width:30px;
+    height:30px;
+    border-radius:50%;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:800;
+    font-size:.95rem;
+  }
+  .card-title-wrap{ flex:1 1 auto; min-width:0; }
+  .card-time{
+    font-size:.8rem;
+    font-weight:700;
+    color:var(--terracotta-dark);
+    text-transform:uppercase;
+    letter-spacing:.4px;
+  }
+  .card-name{
+    font-size:1.12rem;
+    font-weight:800;
+    margin:1px 0 2px 0;
+    word-wrap:break-word;
+  }
+  .card.done .card-name{ text-decoration:line-through; }
+  .cat-label{
+    display:inline-block;
+    font-size:.75rem;
+    font-weight:700;
+    color:#fff;
+    padding:2px 8px;
+    border-radius:8px;
+    margin-right:6px;
+  }
+  .card-note{
+    font-size:.92rem;
+    color:var(--muted);
+    margin:6px 0 0 0;
+  }
+  .badges-row{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    margin-top:8px;
+  }
+  .food-badge{
+    font-size:.78rem;
+    font-weight:700;
+    padding:4px 9px;
+    border-radius:8px;
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+  }
+  .food-badge.halal{ background:#E4F3EA; color:var(--green); }
+  .food-badge.halal-full{ background:#DCF0E4; color:#2C7148; }
+  .food-badge.no-alcohol{ background:#EAF3F8; color:var(--blue); }
+  .food-badge.has-alcohol{ background:#FBEAE7; color:var(--red); }
+
+  .card-actions{
+    display:flex;
+    gap:8px;
+    margin-top:10px;
+  }
+  .btn{
+    border:none;
+    border-radius:12px;
+    padding:11px 12px;
+    font-size:.92rem;
+    font-weight:700;
+    cursor:pointer;
+    min-height:44px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    flex:1 1 auto;
+  }
+  .btn-route{
+    background:var(--blue);
+    color:#fff;
+  }
+  .btn-gmaps{
+    background:var(--sand-dark);
+    color:var(--ink);
+    flex:0 0 auto;
+    padding:11px 14px;
+  }
+  .btn-done{
+    background:var(--bg);
+    color:var(--ink);
+    border:1.5px solid var(--line);
+    flex:0 0 auto;
+    padding:11px 14px;
+  }
+  .btn-done.checked{
+    background:var(--green);
+    border-color:var(--green);
+    color:#fff;
+  }
+  a.btn{ text-decoration:none; }
+
+  /* Leaflet marker custom styles */
+  .pin-wrap{ position:relative; width:38px; height:38px; }
+  .pin-circle{
+    width:32px; height:32px;
+    border-radius:50% 50% 50% 0;
+    transform: rotate(-45deg);
+    position:absolute;
+    left:3px; top:2px;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 2px 6px rgba(0,0,0,.35);
+    border:2px solid #fff;
+  }
+  .pin-circle span{
+    transform: rotate(45deg);
+    color:#fff;
+    font-weight:800;
+    font-size:.85rem;
+  }
+  .pin-badge{
+    position:absolute;
+    width:15px; height:15px;
+    border-radius:50%;
+    font-size:9px;
+    display:flex; align-items:center; justify-content:center;
+    border:1.5px solid #fff;
+    color:#fff;
+    font-weight:800;
+  }
+  .pin-badge.halal{ background:var(--green); top:-3px; right:-1px; }
+  .pin-badge.alcohol{ background:var(--red); bottom:2px; right:-4px; }
+  .pin-wrap.done .pin-circle{ filter:grayscale(.6) brightness(1.15); }
+
+  .leaflet-popup-content{ font-size:.95rem; line-height:1.4; min-width:180px; }
+  .leaflet-popup-content b{ font-size:1.02rem; }
+  .popup-time{ color:var(--terracotta-dark); font-weight:700; font-size:.82rem; }
+
+  footer{
+    flex:0 0 auto;
+    text-align:center;
+    font-size:.75rem;
+    color:var(--muted);
+    padding:8px;
+    background:var(--sand-dark);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🇪🇸 Barcelona Aile Gezisi</h1>
+  <p class="sub">2 günlük gezi planı · durakları takip et, yol tarifi al</p>
+  <div class="day-tabs">
+    <button class="day-tab active" data-day="1">1. Gün<small>Gaudí Rotası</small></button>
+    <button class="day-tab" data-day="2">2. Gün<small>Eski Şehir + Deniz</small></button>
+  </div>
+</header>
+
+<div class="toolbar">
+  <div class="search-box">
+    <input id="searchInput" type="search" placeholder="Durak ara (isim, açıklama)..." autocomplete="off" />
+  </div>
+  <div class="filter-chips" id="filterChips">
+    <button class="chip active" data-filter="all">Tümü</button>
+    <button class="chip" data-filter="halal">🍽️ Helal Yemek</button>
+    <button class="chip" data-filter="gezi">🏛️ Geziler</button>
+    <button class="chip" data-filter="dis">🏖️ Plaj / Dış Mekân</button>
+  </div>
+</div>
+
+<div class="legend">
+  <span><i class="dot" style="background:#2E6F95"></i> Gezi / Müze</span>
+  <span><i class="dot" style="background:#3F8F5F"></i> Helal Restoran</span>
+  <span><i class="dot" style="background:#EA9A3E"></i> Plaj / Dış Mekân</span>
+  <span>✔️ Tamamlandı</span>
+</div>
+
+<main>
+  <div class="map-wrap"><div id="map"></div></div>
+  <div class="list-wrap" id="listWrap"></div>
+</main>
+
+<footer>Harita karoları için internet gerekir · Veriler cihazda gömülüdür</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  // ---------- VERİ ----------
+  var STOPS = [
+    // GÜN 1 – Gaudí
+    { id:"d1-1", day:1, time:"09:00", name:"Sagrada Família", lat:41.4036299, lng:2.1743558,
+      category:"gezi", note:"Online bilet şart, kapıda kuyruk uzun olabilir." },
+    { id:"d1-2", day:1, time:"11:30", name:"Aladdin Restaurant", lat:41.4086611, lng:2.1745222,
+      category:"yemek", note:"Lübnan mutfağı.", halal:"full", alcohol:false, cuisine:"Lübnan" },
+    { id:"d1-3", day:1, time:"14:00", name:"Park Güell", lat:41.4144948, lng:2.1526945,
+      category:"gezi", note:"Monumental Zone bileti gerekli, önceden alınmalı." },
+    { id:"d1-4", day:1, time:"17:30", name:"Casa Batlló", lat:41.3917, lng:2.164918,
+      category:"gezi", note:"Gaudí'nin ünlü cephe eseri, fotoğraf molası." },
+    { id:"d1-5", day:1, time:"19:00", name:"La Pedrera – Casa Milà", lat:41.3952155, lng:2.1619024,
+      category:"gezi", note:"Pazartesi günleri kapalı." },
+
+    // GÜN 2 – Eski Şehir + Deniz
+    { id:"d2-1", day:2, time:"09:30", name:"Mercat de la Boqueria", lat:41.3817399, lng:2.1715853,
+      category:"pazar", note:"Renkli pazar; pazar günü kapalı." },
+    { id:"d2-2", day:2, time:"10:45", name:"La Rambla", lat:41.3856087, lng:2.1698166,
+      category:"yuruyus", note:"Yankesiciye dikkat, çantalar önde tutulmalı." },
+    { id:"d2-3", day:2, time:"12:30", name:"Paloma Blanca", lat:41.3796, lng:2.167237,
+      category:"yemek", note:"Fas mutfağı, balık/paella önerilir.", halal:"full", alcohol:false, cuisine:"Fas" },
+    { id:"d2-4", day:2, time:"14:00", name:"Katedral / Gotik Mahalle", lat:41.383962, lng:2.1761991,
+      category:"gezi", note:"Dar sokaklarda keyifli bir yürüyüş." },
+    { id:"d2-5", day:2, time:"15:30", name:"Picasso Müzesi", lat:41.3852706, lng:2.1809472,
+      category:"muze", note:"Pazartesi günleri kapalı." },
+    { id:"d2-6", day:2, time:"17:30", name:"Barceloneta Plajı", lat:41.3783713, lng:2.1924685,
+      category:"plaj", note:"Gün batımına doğru dinlenme molası." },
+    { id:"d2-7", day:2, time:"20:00", name:"La Lolita", lat:41.388977, lng:2.1657512,
+      category:"yemek", note:"Deniz paellası önerilir.", halal:"partial", alcohol:true, cuisine:"Akdeniz" },
+    { id:"d2-8", day:2, time:"21:30", name:"Magic Fountain Montjuïc", lat:41.3711603, lng:2.1517402,
+      category:"opsiyonel", note:"Sadece Perşembe/Cuma/Cumartesi günleri çalışır. Opsiyonel." }
+  ];
+
+  // Her günün kendi kronolojik sırasına göre sabit duraç numarası ata
+  [1,2].forEach(function(d){
+    STOPS.filter(function(s){ return s.day===d; })
+         .sort(function(a,b){ return a.time.localeCompare(b.time); })
+         .forEach(function(s, i){ s.order = i+1; });
+  });
+
+  var CAT_LABEL = {
+    gezi:"Gezi", muze:"Müze", yemek:"Yemek", plaj:"Plaj",
+    yuruyus:"Yürüyüş", pazar:"Pazar", opsiyonel:"Opsiyonel"
+  };
+  var CAT_ICON = {
+    gezi:"🏛️", muze:"🖼️", yemek:"🍽️", plaj:"🏖️",
+    yuruyus:"🚶", pazar:"🛒", opsiyonel:"✨"
+  };
+
+  function categoryColor(cat){
+    if(cat==="yemek") return "#3F8F5F";
+    if(cat==="plaj" || cat==="yuruyus" || cat==="opsiyonel") return "#EA9A3E";
+    return "#2E6F95";
+  }
+
+  function appleMapsUrl(s){
+    return "https://maps.apple.com/?ll=" + s.lat + "," + s.lng + "&q=" + encodeURIComponent(s.name);
+  }
+  function googleMapsUrl(s){
+    return "https://www.google.com/maps/search/?api=1&query=" + s.lat + "," + s.lng;
+  }
+  function googleMapsDirUrl(s){
+    return "https://www.google.com/maps/dir/?api=1&destination=" + s.lat + "," + s.lng;
+  }
+
+  // ---------- STATE ----------
+  var state = {
+    day: 1,
+    filter: "all",
+    search: "",
+    completed: {},   // JS-state (localStorage kullanılmıyor, kasıtlı)
+    activeId: null
+  };
+
+  // ---------- MAP SETUP ----------
+  var map = L.map("map", { tap:true, zoomControl:true }).setView([41.394, 2.168], 14);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap katkıda bulunanları'
+  }).addTo(map);
+
+  var markerLayer = L.layerGroup().addTo(map);
+  var routeLayer = L.layerGroup().addTo(map);
+  var markersById = {};
+
+  function buildIcon(stop, isActive){
+    var color = categoryColor(stop.category);
+    var done = !!state.completed[stop.id];
+    var halalBadge = "";
+    var alcoholBadge = "";
+    if(stop.category === "yemek"){
+      halalBadge = '<div class="pin-badge halal">H</div>';
+      if(stop.alcohol){
+        alcoholBadge = '<div class="pin-badge alcohol">A</div>';
+      }
+    }
+    var num = done ? "✓" : stop.order;
+    var scale = isActive ? "transform:scale(1.15);" : "";
+    var html =
+      '<div class="pin-wrap' + (done ? " done" : "") + '" style="' + scale + '">' +
+        '<div class="pin-circle" style="background:' + color + '"><span>' + num + '</span></div>' +
+        halalBadge + alcoholBadge +
+      '</div>';
+    return L.divIcon({ html: html, className: "", iconSize:[38,38], iconAnchor:[19,34], popupAnchor:[0,-30] });
+  }
+
+  function popupHtml(stop){
+    var html = '<div><span class="popup-time">' + stop.time + '</span><br><b>' + stop.name + '</b>';
+    html += '<div style="margin-top:4px;color:#5c4f47;">' + CAT_ICON[stop.category] + ' ' + CAT_LABEL[stop.category] + '</div>';
+    if(stop.note){ html += '<div style="margin-top:4px;">' + stop.note + '</div>'; }
+    if(stop.category === "yemek"){
+      html += '<div style="margin-top:6px;font-size:.85rem;">';
+      html += stop.halal === "full" ? "✅ Tam helal" : "🍽️ Helal mutfak";
+      html += stop.alcohol ? " · 🍷 Mekanda alkol var" : " · 🚫 Alkolsüz";
+      html += "</div>";
+    }
+    html += '<div style="margin-top:8px;"><a href="' + appleMapsUrl(stop) + '" target="_blank" rel="noopener">📍 Yol Tarifi Al</a></div>';
+    return html;
+  }
+
+  // ---------- FILTER / SEARCH ----------
+  function matchesFilter(stop){
+    if(state.filter === "all") return true;
+    if(state.filter === "halal") return stop.category === "yemek";
+    if(state.filter === "gezi") return ["gezi","muze","pazar"].indexOf(stop.category) !== -1;
+    if(state.filter === "dis") return ["plaj","yuruyus","opsiyonel"].indexOf(stop.category) !== -1;
+    return true;
+  }
+  function matchesSearch(stop){
+    if(!state.search) return true;
+    var q = state.search.toLocaleLowerCase("tr");
+    var hay = (stop.name + " " + (stop.note||"") + " " + (stop.cuisine||"")).toLocaleLowerCase("tr");
+    return hay.indexOf(q) !== -1;
+  }
+
+  function getVisibleStops(){
+    return STOPS.filter(function(s){ return s.day === state.day; })
+                .filter(matchesFilter)
+                .filter(matchesSearch)
+                .sort(function(a,b){ return a.time.localeCompare(b.time); });
+  }
+
+  // ---------- RENDER ----------
+  function render(){
+    renderMap();
+    renderList();
+  }
+
+  function renderMap(){
+    markerLayer.clearLayers();
+    routeLayer.clearLayers();
+    markersById = {};
+
+    var visible = getVisibleStops();
+
+    visible.forEach(function(stop){
+      var marker = L.marker([stop.lat, stop.lng], { icon: buildIcon(stop, stop.id === state.activeId) });
+      marker.bindPopup(popupHtml(stop));
+      marker.on("click", function(){
+        setActive(stop.id, false);
+      });
+      marker.addTo(markerLayer);
+      markersById[stop.id] = marker;
+    });
+
+    if(visible.length > 1){
+      var latlngs = visible.map(function(s){ return [s.lat, s.lng]; });
+      L.polyline(latlngs, {
+        color: "#C74E36",
+        weight: 3,
+        opacity: 0.55,
+        dashArray: "6 8"
+      }).addTo(routeLayer);
+    }
+
+    if(visible.length > 0){
+      var bounds = L.latLngBounds(visible.map(function(s){ return [s.lat, s.lng]; }));
+      map.flyToBounds(bounds, { padding:[40,40], maxZoom:16, duration:0.6 });
+    }
+  }
+
+  function renderList(){
+    var wrap = document.getElementById("listWrap");
+    wrap.innerHTML = "";
+    var visible = getVisibleStops();
+
+    if(visible.length === 0){
+      wrap.innerHTML = '<div class="empty-msg">Bu filtreyle eşleşen durak yok 🙁</div>';
+      return;
+    }
+
+    visible.forEach(function(stop){
+      var card = document.createElement("div");
+      card.className = "card" + (stop.id === state.activeId ? " active" : "") + (state.completed[stop.id] ? " done" : "");
+      card.dataset.id = stop.id;
+
+      var badges = "";
+      if(stop.category === "yemek"){
+        badges += '<div class="badges-row">';
+        badges += stop.halal === "full"
+          ? '<span class="food-badge halal-full">✅ Tam Helal</span>'
+          : '<span class="food-badge halal">🍽️ Helal Mutfak</span>';
+        badges += stop.alcohol
+          ? '<span class="food-badge has-alcohol">🍷 Mekanda Alkol Var</span>'
+          : '<span class="food-badge no-alcohol">🚫 Alkolsüz</span>';
+        badges += "</div>";
+      }
+
+      card.innerHTML =
+        '<div class="card-top">' +
+          '<div class="badge-num" style="background:' + categoryColor(stop.category) + '">' + stop.order + '</div>' +
+          '<div class="card-title-wrap">' +
+            '<div class="card-time">' + stop.time + '</div>' +
+            '<div class="card-name">' + stop.name + '</div>' +
+            '<span class="cat-label" style="background:' + categoryColor(stop.category) + '">' + CAT_ICON[stop.category] + ' ' + CAT_LABEL[stop.category] + '</span>' +
+          '</div>' +
+        '</div>' +
+        (stop.note ? '<p class="card-note">' + stop.note + '</p>' : "") +
+        badges +
+        '<div class="card-actions">' +
+          '<a class="btn btn-route" href="' + appleMapsUrl(stop) + '" target="_blank" rel="noopener">🧭 Yol Tarifi</a>' +
+          '<a class="btn btn-gmaps" href="' + googleMapsDirUrl(stop) + '" target="_blank" rel="noopener">G</a>' +
+          '<button class="btn btn-done' + (state.completed[stop.id] ? " checked" : "") + '" data-action="toggle-done">' +
+            (state.completed[stop.id] ? "✔ Bitti" : "☐ Tamamlandı") +
+          '</button>' +
+        '</div>';
+
+      card.addEventListener("click", function(e){
+        if(e.target.closest("[data-action='toggle-done']") || e.target.closest("a")) return;
+        setActive(stop.id, true);
+      });
+
+      card.querySelector("[data-action='toggle-done']").addEventListener("click", function(e){
+        e.stopPropagation();
+        toggleDone(stop.id);
+      });
+
+      wrap.appendChild(card);
+    });
+  }
+
+  function toggleDone(id){
+    state.completed[id] = !state.completed[id];
+    var marker = markersById[id];
+    var stop = STOPS.find(function(s){ return s.id === id; });
+    if(marker && stop){
+      marker.setIcon(buildIcon(stop, id === state.activeId));
+    }
+    renderList();
+  }
+
+  function setActive(id, panFromList){
+    state.activeId = id;
+    var stop = STOPS.find(function(s){ return s.id === id; });
+    if(!stop) return;
+
+    // Harita güncelle
+    Object.keys(markersById).forEach(function(mid){
+      var s = STOPS.find(function(x){ return x.id === mid; });
+      markersById[mid].setIcon(buildIcon(s, mid === id));
+    });
+    var marker = markersById[id];
+    if(marker){
+      marker.openPopup();
+      if(panFromList){
+        map.flyTo([stop.lat, stop.lng], Math.max(map.getZoom(), 15), { duration:0.6 });
+      }
+    }
+
+    // Liste güncelle: sadece class değiştir (tam render'a gerek yok)
+    var cards = document.querySelectorAll(".card");
+    cards.forEach(function(c){
+      c.classList.toggle("active", c.dataset.id === id);
+    });
+    if(!panFromList){
+      var activeCard = document.querySelector('.card[data-id="' + id + '"]');
+      if(activeCard){
+        activeCard.scrollIntoView({ behavior:"smooth", block:"center" });
+      }
+    }
+  }
+
+  // ---------- EVENTS ----------
+  document.querySelectorAll(".day-tab").forEach(function(tab){
+    tab.addEventListener("click", function(){
+      document.querySelectorAll(".day-tab").forEach(function(t){ t.classList.remove("active"); });
+      tab.classList.add("active");
+      state.day = parseInt(tab.dataset.day, 10);
+      state.activeId = null;
+      render();
+    });
+  });
+
+  document.querySelectorAll(".chip").forEach(function(chip){
+    chip.addEventListener("click", function(){
+      document.querySelectorAll(".chip").forEach(function(c){ c.classList.remove("active"); });
+      chip.classList.add("active");
+      state.filter = chip.dataset.filter;
+      render();
+    });
+  });
+
+  document.getElementById("searchInput").addEventListener("input", function(e){
+    state.search = e.target.value;
+    render();
+  });
+
+  // ---------- İLK YÜKLEME ----------
+  render();
+})();
+</script>
+</body>
+</html>
