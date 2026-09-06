@@ -77,8 +77,8 @@
     border-radius:14px 14px 0 0;
     background:rgba(255,255,255,0.22);
     color:#fff;
-    padding:14px 10px;
-    font-size:1.05rem;
+    padding:12px 6px;
+    font-size:.92rem;
     font-weight:700;
     cursor:pointer;
     min-height:50px;
@@ -87,7 +87,7 @@
   .day-tab small{
     display:block;
     font-weight:500;
-    font-size:.78rem;
+    font-size:.68rem;
     opacity:.85;
     margin-top:2px;
   }
@@ -201,14 +201,15 @@
   }
   @media (min-width: 880px){
     main{ flex-direction:row; }
-    .map-wrap{ flex:1 1 55%; }
-    .list-wrap{ flex:1 1 45%; border-top:none; border-left:1px solid var(--line); }
+    .map-wrap{ flex:1 1 50%; border-bottom:none; }
+    .list-wrap{ flex:1 1 50%; border-top:none; border-left:1px solid var(--line); }
   }
 
   .map-wrap{
     position:relative;
-    flex:0 0 42vh;
-    min-height:260px;
+    flex:1 1 50%;
+    min-height:280px;
+    border-bottom:1px solid var(--line);
   }
   #map{
     width:100%;
@@ -217,12 +218,12 @@
   }
 
   .list-wrap{
-    flex:1 1 auto;
+    flex:1 1 50%;
     overflow-y:auto;
     -webkit-overflow-scrolling:touch;
     background:var(--bg);
-    border-top:1px solid var(--line);
     padding:10px 10px 30px 10px;
+    min-height:0;
   }
   .empty-msg{
     text-align:center;
@@ -430,13 +431,14 @@
 <body>
 
 <header>
-  <span class="version-badge">v3</span>
+  <span class="version-badge">v4</span>
   <h1>🇪🇸 Barcelona Aile Gezisi</h1>
   <p class="sub">Esnek, bölge bölge gezi rehberi · kesin saat yok, aynı bölgedekileri birlikte gez</p>
   <div class="day-tabs">
-    <button class="day-tab active" data-day="1">Bugün<small>6 Eylül · Chill Akşam</small></button>
-    <button class="day-tab" data-day="2">Yarın<small>7 Eylül · Kapsamlı Gün</small></button>
+    <button class="day-tab active" data-day="1">Bugün<small>6 Eylül · Chill</small></button>
+    <button class="day-tab" data-day="2">Yarın<small>7 Eylül · Kapsamlı</small></button>
     <button class="day-tab" data-day="3">Keşfet<small>Vaktiniz Olursa</small></button>
+    <button class="day-tab" data-day="4">Tümü<small>Hepsi Bir Arada</small></button>
   </div>
 </header>
 
@@ -663,14 +665,24 @@
       extra:["📅 Sadece Perşembe/Cuma/Cumartesi akşamları","💶 Tamamen ücretsiz gösteri","🚫 Bu ziyaretinizde çalışmıyor"] }
   ];
 
-  // Her günün kendi listesindeki sırasına göre sabit duraç numarası ata
-  (function assignOrder(){
-    var counters = {};
-    STOPS.forEach(function(s){
-      counters[s.day] = (counters[s.day] || 0) + 1;
-      s.order = counters[s.day];
-    });
-  })();
+  // Verideki yazılış sırasını koru (Tümü sekmesinde gruplanırken de referans alınır)
+  STOPS.forEach(function(s, i){ s.seq = i; });
+
+  function groupRank(stop){
+    if(["gezi","muze","pazar","yapi"].indexOf(stop.category) !== -1) return 1;
+    if(["yemek","lezzet"].indexOf(stop.category) !== -1) return 2;
+    if(["plaj","yuruyus"].indexOf(stop.category) !== -1) return 3;
+    if(stop.category === "etkinlik") return 4;
+    return 5;
+  }
+
+  var CLUSTER_LABELS = {
+    1: "🏛️ Gezilecek & Görülecek Yerler",
+    2: "🍽️ Yeme-İçme (Helal & Lezzet)",
+    3: "🏖️ Plaj & Yürüyüş",
+    4: "🎉 Etkinlikler",
+    5: "Diğer"
+  };
 
   var CAT_LABEL = {
     gezi:"Gezi", muze:"Müze", yemek:"Yemek", plaj:"Plaj",
@@ -693,14 +705,27 @@
   }
 
   function appleMapsUrl(s){
+    if(s.addressQuery){ return "https://maps.apple.com/?q=" + encodeURIComponent(s.addressQuery); }
     return "https://maps.apple.com/?ll=" + s.lat + "," + s.lng + "&q=" + encodeURIComponent(s.name);
   }
   function googleMapsUrl(s){
+    if(s.addressQuery){ return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(s.addressQuery); }
     return "https://www.google.com/maps/search/?api=1&query=" + s.lat + "," + s.lng;
   }
   function googleMapsDirUrl(s){
+    if(s.addressQuery){ return "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(s.addressQuery); }
     return "https://www.google.com/maps/dir/?api=1&destination=" + s.lat + "," + s.lng;
   }
+
+  // ---------- KONAKLAMA (ev/otel konumu) ----------
+  // Not: Pin konumu Aragó-Lepant kesişimi civarına göre yaklaşık yerleştirildi;
+  // "Yol Tarifi" linkleri hassas sonuç için doğrudan adres metnini kullanıyor.
+  var HOME = {
+    name: "Konaklamanız",
+    addressQuery: "Carrer d'Aragó, 347, Barcelona, Spain",
+    lat: 41.4011, lng: 2.1721,
+    note: "Sagrada Família'ya yürüyerek ~6 dakika; Aragó-Lepant kesişimi civarında (yaklaşık konum)."
+  };
 
   // ---------- STATE ----------
   var state = {
@@ -712,7 +737,7 @@
   };
 
   // ---------- MAP SETUP ----------
-  var map = L.map("map", { tap:true, zoomControl:true }).setView([41.394, 2.168], 14);
+  var map = L.map("map", { tap:true, zoomControl:true }).setView([HOME.lat, HOME.lng], 14);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
     attribution: '&copy; OpenStreetMap katkıda bulunanları'
@@ -720,9 +745,34 @@
 
   var markerLayer = L.layerGroup().addTo(map);
   var routeLayer = L.layerGroup().addTo(map);
+  var homeLayer = L.layerGroup().addTo(map);
   var markersById = {};
+  var numbersById = {};
 
-  function buildIcon(stop, isActive){
+  function buildHomeIcon(){
+    var html =
+      '<div style="width:36px;height:36px;position:relative;">' +
+        '<div style="width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);position:absolute;left:3px;top:2px;' +
+        'background:#2C2C54;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4);">' +
+          '<span style="transform:rotate(45deg);font-size:15px;">🏠</span>' +
+        '</div>' +
+      '</div>';
+    return L.divIcon({ html: html, className: "", iconSize:[36,36], iconAnchor:[18,32], popupAnchor:[0,-28] });
+  }
+
+  function renderHomeMarker(){
+    homeLayer.clearLayers();
+    var marker = L.marker([HOME.lat, HOME.lng], { icon: buildHomeIcon() });
+    marker.bindPopup(
+      '<div><b>🏠 ' + HOME.name + '</b>' +
+      '<div style="margin-top:4px;">Carrer d\'Aragó, 347</div>' +
+      '<div style="margin-top:4px;color:#5c4f47;">' + HOME.note + '</div>' +
+      '<div style="margin-top:8px;"><a href="' + appleMapsUrl(HOME) + '" target="_blank" rel="noopener">📍 Yol Tarifi Al</a></div></div>'
+    );
+    marker.addTo(homeLayer);
+  }
+
+  function buildIcon(stop, num, isActive){
     var color = categoryColor(stop.category);
     var done = !!state.completed[stop.id];
     var halalBadge = "";
@@ -737,11 +787,11 @@
     if(stop.pick){
       pickBadge = '<div class="pin-badge pick">★</div>';
     }
-    var num = done ? "✓" : stop.order;
+    var displayNum = done ? "✓" : num;
     var scale = isActive ? "transform:scale(1.15);" : "";
     var html =
       '<div class="pin-wrap' + (done ? " done" : "") + '" style="' + scale + '">' +
-        '<div class="pin-circle" style="background:' + color + '"><span>' + num + '</span></div>' +
+        '<div class="pin-circle" style="background:' + color + '"><span>' + displayNum + '</span></div>' +
         halalBadge + alcoholBadge + pickBadge +
       '</div>';
     return L.divIcon({ html: html, className: "", iconSize:[38,38], iconAnchor:[19,34], popupAnchor:[0,-30] });
@@ -786,10 +836,23 @@
   }
 
   function getVisibleStops(){
-    return STOPS.filter(function(s){ return s.day === state.day; })
-                .filter(matchesFilter)
-                .filter(matchesSearch)
-                .sort(function(a,b){ return a.order-b.order; });
+    var stops = STOPS.filter(function(s){ return state.day === 4 || s.day === state.day; })
+                      .filter(matchesFilter)
+                      .filter(matchesSearch);
+    if(state.day === 4){
+      stops.sort(function(a,b){
+        var r = groupRank(a) - groupRank(b);
+        return r !== 0 ? r : a.seq - b.seq;
+      });
+    } else {
+      stops.sort(function(a,b){ return a.seq - b.seq; });
+    }
+    return stops;
+  }
+
+  function zoneLabelFor(stop){
+    if(state.day === 4){ return CLUSTER_LABELS[groupRank(stop)]; }
+    return stop.zone || null;
   }
 
   // ---------- RENDER ----------
@@ -802,11 +865,16 @@
     markerLayer.clearLayers();
     routeLayer.clearLayers();
     markersById = {};
+    numbersById = {};
+
+    renderHomeMarker();
 
     var visible = getVisibleStops();
 
-    visible.forEach(function(stop){
-      var marker = L.marker([stop.lat, stop.lng], { icon: buildIcon(stop, stop.id === state.activeId) });
+    visible.forEach(function(stop, idx){
+      var num = idx + 1;
+      numbersById[stop.id] = num;
+      var marker = L.marker([stop.lat, stop.lng], { icon: buildIcon(stop, num, stop.id === state.activeId) });
       marker.bindPopup(popupHtml(stop));
       marker.on("click", function(){
         setActive(stop.id, false);
@@ -815,7 +883,7 @@
       markersById[stop.id] = marker;
     });
 
-    if(visible.length > 1){
+    if(visible.length > 1 && state.day !== 4){
       var latlngs = visible.map(function(s){ return [s.lat, s.lng]; });
       L.polyline(latlngs, {
         color: "#C74E36",
@@ -825,10 +893,9 @@
       }).addTo(routeLayer);
     }
 
-    if(visible.length > 0){
-      var bounds = L.latLngBounds(visible.map(function(s){ return [s.lat, s.lng]; }));
-      map.flyToBounds(bounds, { padding:[40,40], maxZoom:16, duration:0.6 });
-    }
+    var boundsPoints = visible.map(function(s){ return [s.lat, s.lng]; });
+    boundsPoints.push([HOME.lat, HOME.lng]);
+    map.flyToBounds(L.latLngBounds(boundsPoints), { padding:[40,40], maxZoom:16, duration:0.6 });
   }
 
   function renderList(){
@@ -852,12 +919,15 @@
     }
 
     var lastZone = null;
-    visible.forEach(function(stop){
-      if(stop.zone && stop.zone !== lastZone){
-        lastZone = stop.zone;
+    visible.forEach(function(stop, idx){
+      var num = idx + 1;
+      var zLabel = zoneLabelFor(stop);
+      if(zLabel && zLabel !== lastZone){
+        lastZone = zLabel;
+        var sub = ZONE_INFO[zLabel] || CLUSTER_INFO[zLabel] || "";
         var zoneDiv = document.createElement("div");
         zoneDiv.className = "zone-header";
-        zoneDiv.innerHTML = "📍 " + stop.zone + (ZONE_INFO[stop.zone] ? '<div class="zone-sub">' + ZONE_INFO[stop.zone] + "</div>" : "");
+        zoneDiv.innerHTML = "📍 " + zLabel + (sub ? '<div class="zone-sub">' + sub + "</div>" : "");
         wrap.appendChild(zoneDiv);
       }
       var card = document.createElement("div");
@@ -892,7 +962,7 @@
       card.innerHTML =
         ribbon +
         '<div class="card-top">' +
-          '<div class="badge-num" style="background:' + categoryColor(stop.category) + '">' + stop.order + '</div>' +
+          '<div class="badge-num" style="background:' + categoryColor(stop.category) + '">' + num + '</div>' +
           '<div class="card-title-wrap">' +
             '<div class="card-time">' + stop.time + '</div>' +
             '<div class="card-name">' + stop.name + '</div>' +
@@ -929,7 +999,7 @@
     var marker = markersById[id];
     var stop = STOPS.find(function(s){ return s.id === id; });
     if(marker && stop){
-      marker.setIcon(buildIcon(stop, id === state.activeId));
+      marker.setIcon(buildIcon(stop, numbersById[id], id === state.activeId));
     }
     renderList();
   }
@@ -942,7 +1012,7 @@
     // Harita güncelle
     Object.keys(markersById).forEach(function(mid){
       var s = STOPS.find(function(x){ return x.id === mid; });
-      markersById[mid].setIcon(buildIcon(s, mid === id));
+      markersById[mid].setIcon(buildIcon(s, numbersById[mid], mid === id));
     });
     var marker = markersById[id];
     if(marker){
@@ -985,6 +1055,14 @@
       { key:"lezzet", label:"🍰 Lezzet & Kafe" },
       { key:"yemek", label:"🍽️ Helal Yemek" },
       { key:"etkinlik", label:"🎉 Etkinlikler" }
+    ],
+    4: [
+      { key:"all", label:"Tümü" },
+      { key:"halal", label:"🍽️ Helal Yemek" },
+      { key:"gezi", label:"🏛️ Geziler & Yapılar" },
+      { key:"dis", label:"🏖️ Plaj / Dış Mekân" },
+      { key:"lezzet", label:"🍰 Lezzet & Kafe" },
+      { key:"etkinlik", label:"🎉 Etkinlikler" }
     ]
   };
 
@@ -1002,19 +1080,33 @@
        '<span>⭐ İçeri Girilmeye Değer</span>' +
        '<span><i class="dot" style="background:#C2478B"></i> Lezzet / Kafe</span>' +
        '<span><i class="dot" style="background:#3F8F5F"></i> Helal Restoran</span>' +
-       '<span><i class="dot" style="background:#D64550"></i> Etkinlik</span>'
+       '<span><i class="dot" style="background:#D64550"></i> Etkinlik</span>',
+    4: '<span><i class="dot" style="background:#2E6F95"></i> Gezi/Müze/Yapı</span>' +
+       '<span><i class="dot" style="background:#3F8F5F"></i> Helal Yemek</span>' +
+       '<span><i class="dot" style="background:#C2478B"></i> Lezzet/Kafe</span>' +
+       '<span><i class="dot" style="background:#EA9A3E"></i> Plaj/Yürüyüş</span>' +
+       '<span><i class="dot" style="background:#D64550"></i> Etkinlik</span>' +
+       '<span>🏠 Konaklamanız</span>'
   };
 
   var DAY_INFO = {
     1: "☀️ <b>Bugün Pazar (6 Eylül)</b>, saat 16:21 itibarıyla plan yapıyoruz. Boqueria pazarı bugün kapalı olduğu için programda yok. Aşağıdaki duraklar birbirine yürüme mesafesinde — kesin bir sıra değil, canınız nasıl isterse öyle gezin.",
     2: "📅 <b>Yarın Pazartesi (7 Eylül)</b> — La Pedrera'nın içi ve Picasso Müzesi haftalık kapanış günü olduğu için kapalı; Montjuïc'teki Sihirli Çeşme de sadece Per/Cum/Cmt çalıştığından programda yok (Keşfet sekmesinde not olarak duruyor). İki bölgeye ayrılmış öneriler aşağıda, hepsini yapmak zorunda değilsiniz.",
-    3: "💡 Bu sekmedeki yerler zorunlu değil; vaktiniz/enerjiniz kalırsa göz atabileceğiniz ekstra öneriler."
+    3: "💡 Bu sekmedeki yerler zorunlu değil; vaktiniz/enerjiniz kalırsa göz atabileceğiniz ekstra öneriler.",
+    4: "🗺️ Günden bağımsız, gezideki <b>tüm duraklar</b> burada bir arada: bugün, yarın ve Keşfet'in her şeyi. 🏠 işareti konaklamanız (Carrer d'Aragó, 347); haritada her şeyi ona göre konumlandırabilirsiniz."
   };
 
   var ZONE_INFO = {
     "Eski Şehir & Born (Rahat Akşam Turu)": "Hepsi birbirine yürüme mesafesinde, sırayı istediğiniz gibi değiştirebilirsiniz.",
     "Gaudí & Eixample (Sabah → Öğleden Sonra)": "Park Güell biraz uzakta (metro ile); Sagrada Família ile Passeig de Gràcia arası birbirine yakın.",
     "Eski Şehir Tamamlama & Deniz (Akşamüstü → Akşam)": "Boqueria La Rambla üzerinde; plaj ve akşam yemeği deniz kenarında birbirine yakın."
+  };
+
+  var CLUSTER_INFO = {
+    "🏛️ Gezilecek & Görülecek Yerler": "İtinerary'deki ve Keşfet'teki tüm gezi/yapı durakları tek arada.",
+    "🍽️ Yeme-İçme (Helal & Lezzet)": "Planlanan yemekler ile ek helal/lezzet önerilerinin tamamı.",
+    "🏖️ Plaj & Yürüyüş": "Plaj ve yürüyüş duraklarının tamamı.",
+    "🎉 Etkinlikler": "Festival ve etkinlik bilgilerinin tamamı."
   };
 
   function renderChips(){
