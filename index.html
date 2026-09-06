@@ -41,6 +41,18 @@
     color:#fff;
     padding:14px 16px 0 16px;
     flex:0 0 auto;
+    position:relative;
+  }
+  .version-badge{
+    position:absolute;
+    top:10px;
+    right:12px;
+    font-size:.65rem;
+    font-weight:800;
+    letter-spacing:.5px;
+    background:rgba(255,255,255,0.25);
+    padding:2px 7px;
+    border-radius:6px;
   }
   header h1{
     margin:0 0 2px 0;
@@ -157,6 +169,29 @@
   }
   .legend span{display:flex; align-items:center; gap:5px;}
   .dot{width:11px; height:11px; border-radius:50%; display:inline-block; flex:0 0 auto;}
+
+  .day-banner{
+    background:var(--sand-dark);
+    border-radius:12px;
+    padding:10px 14px;
+    font-size:.85rem;
+    color:#5c4f47;
+    margin-bottom:14px;
+    line-height:1.45;
+  }
+  .zone-header{
+    font-size:1rem;
+    font-weight:800;
+    color:var(--terracotta-dark);
+    margin:16px 2px 8px 2px;
+  }
+  .zone-header:first-of-type{ margin-top:0; }
+  .zone-sub{
+    font-size:.8rem;
+    font-weight:500;
+    color:var(--muted);
+    margin-top:2px;
+  }
 
   main{
     flex:1 1 auto;
@@ -395,11 +430,12 @@
 <body>
 
 <header>
+  <span class="version-badge">v3</span>
   <h1>🇪🇸 Barcelona Aile Gezisi</h1>
-  <p class="sub">2 günlük gezi planı + keşif rehberi · durakları takip et, yol tarifi al</p>
+  <p class="sub">Esnek, bölge bölge gezi rehberi · kesin saat yok, aynı bölgedekileri birlikte gez</p>
   <div class="day-tabs">
-    <button class="day-tab active" data-day="1">1. Gün<small>Gaudí Rotası</small></button>
-    <button class="day-tab" data-day="2">2. Gün<small>Eski Şehir + Deniz</small></button>
+    <button class="day-tab active" data-day="1">Bugün<small>6 Eylül · Chill Akşam</small></button>
+    <button class="day-tab" data-day="2">Yarın<small>7 Eylül · Kapsamlı Gün</small></button>
     <button class="day-tab" data-day="3">Keşfet<small>Vaktiniz Olursa</small></button>
   </div>
 </header>
@@ -432,91 +468,100 @@
 
   // ---------- VERİ ----------
   var STOPS = [
-    // GÜN 1 – Gaudí
-    { id:"d1-1", day:1, time:"09:00", name:"Sagrada Família", lat:41.4036299, lng:2.1743558,
-      category:"gezi",
-      note:"Dıştan izlemek bile başlı başına etkileyici ve ücretsizdir; farklı cephelerini (Doğuş & Tutku) görmek için 30-45 dk yeterli.",
+    // BUGÜN (6 Eylül, Pazar) – Chill akşam, saat ~16:21'den itibaren
+    // Zon: Eski Şehir & Born
+    { id:"d1-1", day:1, time:"Akşamüstü", name:"La Rambla", lat:41.3856087, lng:2.1698166,
+      category:"yuruyus", zone:"Eski Şehir & Born (Rahat Akşam Turu)",
+      note:"Koşmadan, vitrinlere bakarak rahat bir yürüyüş; bugün Boqueria pazarı kapalı olduğu için sadece cadde turu yeterli. Yankesiciye dikkat, çantalar önde tutulmalı." },
+    { id:"d1-2", day:1, time:"Akşamüstü", name:"Katedral / Gotik Mahalle", lat:41.383962, lng:2.1761991,
+      category:"gezi", zone:"Eski Şehir & Born (Rahat Akşam Turu)",
+      note:"Dar sokaklarda amaçsızca dolaşmak bu bölgenin en güzel yanı; bugün Pazar olduğu için katedrale saat 17:30'dan sonra ibadet saatinde ücretsiz girilebilir.",
       extra:[
-        "🎫 Giriş: Dış cepheyi görmek ücretsiz; içeri girmek ücretlidir",
-        "💳 Fiyat: Sesli rehberli temel giriş ~€26, kule çıkışlı ~€36, rehberli tur €30-40; 11 yaş altı ücretsiz, Barcelona sakinlerine %50 indirim",
-        "📱 Bilet: SADECE online satılıyor, saatli giriş — 2026'da Gaudí'nin 100. yılı nedeniyle günler öncesinden tükenebiliyor"
+        "🎫 Giriş: Bugün 17:30 sonrası ücretsiz (ibadet saati); turist ziyaret bileti €16",
+        "👀 Öneri: Sadece dış avluyu ve cepheyi görmek yeterli, içeri girmeye gerek yok"
       ] },
-    { id:"d1-2", day:1, time:"11:30", name:"Aladdin Restaurant", lat:41.4086611, lng:2.1745222,
-      category:"yemek", note:"Lübnan mutfağı.", halal:"full", alcohol:false, cuisine:"Lübnan" },
-    { id:"d1-3", day:1, time:"14:00", name:"Park Güell", lat:41.4144948, lng:2.1526945,
-      category:"gezi",
-      note:"Genel park alanları ücretsiz gezilir; sadece mozaikli teraslar ve ejderha heykelinin bulunduğu 'Monumental Zone' ücretli ve saatli bilet gerektirir.",
+    { id:"d1-3", day:1, time:"Gün Batımı Öncesi", name:"Basílica de Santa Maria del Mar", lat:41.3838, lng:2.1815,
+      category:"yapi", zone:"Eski Şehir & Born (Rahat Akşam Turu)", pick:true, pickLabel:"⭐ Bugün Ücretsiz Girilebilir",
+      note:"'Denizin Katedrali' olarak bilinir; limandaki taşıyıcı işçilerin sırtladığı taşlarla inşa edilmiş, saf Katalan Gotik mimarisinin en güzel örneği. Rehbersiz de kısa sürede gezip tarihini hissedebileceğiniz, ailece 'içeri girmeye değer' tek durağımız bu akşam için.",
+      extra:[
+        "🎫 Bugün (Pazar) saat 17:00'den sonra TAMAMEN ÜCRETSİZ",
+        "📱 Rezervasyon gerekmez, kapıdan girilir"
+      ] },
+    { id:"d1-4", day:1, time:"Akşam Yemeği", name:"Ziryab", lat:41.3859, lng:2.1811,
+      category:"yemek", zone:"Eski Şehir & Born (Rahat Akşam Turu)",
+      halal:"full", alcohol:false, cuisine:"Akdeniz Füzyon",
+      note:"Bazilikaya 5 dakika yürüme mesafesinde, tam helal; İspanyol-Fas-Levanten mutfaklarını harmanlıyor, deniz ürünlü paella ve meze tabakları öne çıkıyor.",
+      extra:["💰 Ana yemekler ~€14'ten başlıyor","🕐 Bugün (Pazar) 13:00-23:30 arası açık"] },
+    { id:"d1-5", day:1, time:"Tatlı Molası", name:"Caelum", lat:41.3830, lng:2.1745,
+      category:"lezzet", zone:"Eski Şehir & Born (Rahat Akşam Turu)",
+      note:"İspanya manastırlarında rahibe/keşişlerin yaptığı geleneksel tatlıları sunan atmosferik bir çay salonu; günü yormadan tatlı bir notla kapatmak için ideal.",
+      extra:["🍮 Denenecekler: Manastır tatlıları, bademli kurabiyeler, bal ürünleri","💰 ~€5-9","🕐 Bugün (Pazar) ~20:30 civarı kapanıyor, erken gidin"] },
+
+    // YARIN (7 Eylül, Pazartesi) – Kapsamlı gün
+    // Zon A: Gaudí & Eixample
+    { id:"d2-1", day:2, time:"Sabah (Erken)", name:"Park Güell", lat:41.4144948, lng:2.1526945,
+      category:"gezi", zone:"Gaudí & Eixample (Sabah → Öğleden Sonra)",
+      note:"Şehrin biraz dışında olduğu için günü buradan başlatmak mantıklı; sabah erken hem ışık hem kalabalık açısından en iyi zaman. Genel park alanları ücretsiz, sadece mozaikli teraslar 'Monumental Zone' ücretli ve saatli bilet gerektirir.",
       extra:[
         "🎫 Giriş: Park geneli ÜCRETSİZ, sadece Monumental Zone ücretli",
         "💳 Fiyat: Yetişkin €18, çocuk (7-12)/65 yaş üstü €13.50, 7 yaş altı ücretsiz (yine de bilet gerekli)",
-        "📱 Bilet: Online, saatlik kontenjan var (1400 kişi/saat) — özellikle öğleden sonrası için önceden alın"
+        "📱 Bilet: Online, saatlik kontenjan var — enerjiniz varsa sabah gitmeden önce telefonunuzdan alabilirsiniz"
       ] },
-    { id:"d1-4", day:1, time:"17:30", name:"Casa Batlló", lat:41.3917, lng:2.164918,
-      category:"gezi",
-      note:"Gaudí'nin ünlü 'kemik cephesi'; akşamüstü ışığında dıştan fotoğraflamak bile deneyimin büyük kısmını verir.",
+    { id:"d2-2", day:2, time:"Öğlene Doğru", name:"Sagrada Família", lat:41.4036299, lng:2.1743558,
+      category:"gezi", zone:"Gaudí & Eixample (Sabah → Öğleden Sonra)",
+      note:"Park Güell'den metroyla ~15-20 dk; dıştan izlemek bile başlı başına etkileyici ve ücretsizdir, farklı cephelerini (Doğuş & Tutku) görmek için 30-45 dk yeterli.",
+      extra:[
+        "🎫 Giriş: Dış cepheyi görmek ücretsiz; içeri girmek ücretlidir",
+        "💳 Fiyat: Sesli rehberli temel giriş ~€26, kule çıkışlı ~€36; 11 yaş altı ücretsiz",
+        "📱 Bilet: İçeri girmek isterseniz SADECE online satılıyor — 2026'da Gaudí'nin 100. yılı nedeniyle günler öncesinden tükenebiliyor, bu kadar kısa sürede yer bulmak zor olabilir"
+      ] },
+    { id:"d2-3", day:2, time:"Öğle Yemeği", name:"Aladdin Restaurant", lat:41.4086611, lng:2.1745222,
+      category:"yemek", zone:"Gaudí & Eixample (Sabah → Öğleden Sonra)",
+      halal:"full", alcohol:false, cuisine:"Lübnan",
+      note:"Sagrada Família'ya yürüme mesafesinde, tam helal Lübnan mutfağı.",
+      extra:["🕐 Yarın (Pazartesi) 11:00-24:00 arası açık"] },
+    { id:"d2-4", day:2, time:"Öğleden Sonra", name:"Casa Batlló", lat:41.3917, lng:2.164918,
+      category:"gezi", zone:"Gaudí & Eixample (Sabah → Öğleden Sonra)",
+      note:"Sagrada Família'dan sonra Passeig de Gràcia'ya inerken doğal bir durak; Gaudí'nin ünlü 'kemik cephesi'ni dıştan fotoğraflamak deneyimin büyük kısmını verir.",
       extra:[
         "🎫 Giriş: Dış cephe ücretsiz görülür; içeri girmek ücretli",
-        "💳 Fiyat: Online €29'dan başlıyor (temel bilet), çatı katı için üst seviye bilet gerekir; gişede €4-15 daha pahalı",
+        "💳 Fiyat: Online €29'dan başlıyor; gişede €4-15 daha pahalı",
         "📱 Bilet: Online hızlıca alınabilir, saatli giriş"
       ] },
-    { id:"d1-5", day:1, time:"19:00", name:"La Pedrera – Casa Milà", lat:41.3952155, lng:2.1619024,
-      category:"gezi",
-      note:"Dalgalı taş cephesi ve demir balkonlarıyla ünlü; Pazartesi günleri kapalı.",
+    { id:"d2-5", day:2, time:"Öğleden Sonra", name:"La Pedrera – Casa Milà", lat:41.3952155, lng:2.1619024,
+      category:"gezi", zone:"Gaudí & Eixample (Sabah → Öğleden Sonra)",
+      note:"Casa Batlló'ya 400m; dalgalı taş cephesi ve demir balkonlarıyla ünlü. ⚠️ Yarın Pazartesi olduğu için içeri girilemez (haftalık kapanış günü) — zaten dıştan bakacağınız için bu bir sorun değil.",
       extra:[
-        "🎫 Giriş: Dış cephe ücretsiz; içeri girmek ücretli",
-        "💳 Fiyat: Essential bilet online €25, normal €29; 12 yaş altı ücretsiz",
-        "📱 Bilet: Online alınabilir; bacalı çatı terası için ayrıca gün batımı/gece turu da var (ekstra ücretli)"
+        "🚫 Yarın (Pazartesi) İÇERİSİ KAPALI — sadece dıştan görülebilir",
+        "💳 Normalde içeri giriş: Essential bilet online €25, normal €29"
       ] },
 
-    // GÜN 2 – Eski Şehir + Deniz
-    { id:"d2-1", day:2, time:"09:30", name:"Mercat de la Boqueria", lat:41.3817399, lng:2.1715853,
-      category:"pazar", note:"Renkli pazar; pazar günü kapalı.",
-      extra:["🎫 Giriş: Ücretsiz, sadece aldığınız ürünler için ödenir","💡 Taze meyve suyu ve tapas standları kahvaltı/atıştırmalık için ideal"] },
-    { id:"d2-2", day:2, time:"10:45", name:"La Rambla", lat:41.3856087, lng:2.1698166,
-      category:"yuruyus", note:"Yankesiciye dikkat, çantalar önde tutulmalı." },
-    { id:"d2-3", day:2, time:"12:30", name:"Paloma Blanca", lat:41.3796, lng:2.167237,
-      category:"yemek", note:"Fas mutfağı, balık/paella önerilir.", halal:"full", alcohol:false, cuisine:"Fas" },
-    { id:"d2-4", day:2, time:"14:00", name:"Katedral / Gotik Mahalle", lat:41.383962, lng:2.1761991,
-      category:"gezi",
-      note:"Dar sokaklarda keyifli bir yürüyüş; dış avlu ve cephe çoğu ziyaretçi için yeterlidir.",
-      extra:[
-        "🎫 Giriş: İbadet saatlerinde (~09:30 öncesi/17:30 sonrası, Pzt-Cmt) ücretsiz; turist ziyaret saatlerinde (09:30-18:30) ücretli",
-        "💳 Fiyat: Turist bileti €16 (öğrenci/geniş aile €14)",
-        "👀 Öneri: Sadece dış avluyu ve cepheyi görmek çoğu aile için yeterli, içeri girmeye gerek yok"
-      ] },
-    { id:"d2-5", day:2, time:"15:30", name:"Picasso Müzesi", lat:41.3852706, lng:2.1809472,
-      category:"muze",
-      note:"Genç Picasso'nun eserlerine odaklanan müze; Pazartesi günleri kapalı. Aile için 'içeri girip tarih öğrenilecek' iyi bir seçenek.",
-      extra:[
-        "🎫 Giriş: Ücretli (ayın ilk Pazarı ücretsiz, ama rezervasyon şart)",
-        "💳 Fiyat: Tam bilet €14 online / €15 gişede; indirimli (18-25, 65+, öğrenci) €7.50",
-        "📱 Bilet: Online saatli bilet önerilir; ücretsiz Pazar biletleri 4 gün önce saat 10:00'da açılıyor ve saatler içinde tükeniyor"
-      ] },
-    { id:"d2-6", day:2, time:"17:30", name:"Barceloneta Plajı", lat:41.3783713, lng:2.1924685,
-      category:"plaj", note:"Gün batımına doğru dinlenme molası.",
+    // Zon B: Eski Şehir Tamamlama & Deniz
+    { id:"d2-6", day:2, time:"Akşamüstü Uğrama", name:"Mercat de la Boqueria", lat:41.3817399, lng:2.1715853,
+      category:"pazar", zone:"Eski Şehir Tamamlama & Deniz (Akşamüstü → Akşam)",
+      note:"Bugün (Pazar) kapalıydı ama yarın (Pazartesi) açık; La Rambla'dan geçerken kısa bir uğrama yeterli.",
+      extra:["🎫 Giriş: Ücretsiz, sadece aldığınız ürünler için ödenir","💡 Taze meyve suyu ve tapas standları atıştırmalık için ideal"] },
+    { id:"d2-7", day:2, time:"Alternatif Öğle/Akşam Yemeği", name:"Paloma Blanca", lat:41.3796, lng:2.167237,
+      category:"yemek", zone:"Eski Şehir Tamamlama & Deniz (Akşamüstü → Akşam)",
+      halal:"full", alcohol:false, cuisine:"Fas",
+      note:"Bu bölgedeyken öğle ya da akşam yemeği alternatifi; tam helal, balık/paella önerilir. Aladdin'e gitmediyseniz burada yiyebilirsiniz." },
+    { id:"d2-8", day:2, time:"Gün Batımı", name:"Barceloneta Plajı", lat:41.3783713, lng:2.1924685,
+      category:"plaj", zone:"Eski Şehir Tamamlama & Deniz (Akşamüstü → Akşam)",
+      note:"Günü deniz kenarında bitirmek için ideal; yüzmeseniz bile kumda oturup dinlenmek güzel olur.",
       extra:["🎫 Giriş: Tamamen ücretsiz, halka açık plaj"] },
-    { id:"d2-7", day:2, time:"20:00", name:"La Lolita", lat:41.388977, lng:2.1657512,
-      category:"yemek", note:"Deniz paellası önerilir.", halal:"partial", alcohol:true, cuisine:"Akdeniz" },
-    { id:"d2-8", day:2, time:"21:30", name:"Magic Fountain Montjuïc", lat:41.3711603, lng:2.1517402,
-      category:"opsiyonel", note:"Sadece Perşembe/Cuma/Cumartesi günleri çalışır. Opsiyonel.",
-      extra:["🎫 Giriş: Tamamen ücretsiz gösteri"] },
+    { id:"d2-9", day:2, time:"Akşam Yemeği", name:"La Lolita", lat:41.388977, lng:2.1657512,
+      category:"yemek", zone:"Eski Şehir Tamamlama & Deniz (Akşamüstü → Akşam)",
+      note:"Deniz paellası önerilir; helal mutfak ama mekanda alkol servisi de var.", halal:"partial", alcohol:true, cuisine:"Akdeniz",
+      extra:["🕐 Yarın (Pazartesi) 12:00-24:00 arası açık"] },
 
     // KEŞFET – Görülmeye değer yapılar
     { id:"d3-1", day:3, time:"Rehberli tur ~50dk", name:"Palau de la Música Catalana", lat:41.3875, lng:2.1751,
-      category:"yapi", pick:true, pickLabel:"⭐ Girilmeye Değer Yapı #1",
-      note:"Dünyaca ünlü Modernista konser salonu; rengarenk vitray tavanı ve heykelli sahnesiyle UNESCO Dünya Mirası listesinde. Ailece içeri girip kısa bir rehberli turla tarihini öğrenebileceğiniz en iyi seçeneklerden biri.",
+      category:"yapi", pick:true, pickLabel:"⭐ Girilmeye Değer Yapı",
+      note:"Dünyaca ünlü Modernista konser salonu; rengarenk vitray tavanı ve heykelli sahnesiyle UNESCO Dünya Mirası listesinde. Vaktiniz/enerjiniz olursa içeri girip kısa bir rehberli turla tarihini öğrenebileceğiniz iyi bir seçenek. Not: Ücretsiz girilebilen diğer önerimiz Santa Maria del Mar bazilikasını zaten bu akşamki (6 Eylül) planınıza ekledik.",
       extra:[
         "🎫 Giriş: Ücretli, sadece rehberli/kendi kendine turla girilir",
         "💳 Fiyat: ~€24-27/kişi (50 dakikalık rehberli tur)",
         "📱 Bilet: Resmi site veya GetYourGuide/Tiqets üzerinden online, saatli bilet — genelde aynı gün için de yer bulunabilir"
-      ] },
-    { id:"d3-2", day:3, time:"Ücretsiz saatlerde", name:"Basílica de Santa Maria del Mar", lat:41.3838, lng:2.1815,
-      category:"yapi", pick:true, pickLabel:"⭐ Girilmeye Değer Yapı #2 (Ücretsiz)",
-      note:"'Denizin Katedrali' olarak bilinir; limandaki taşıyıcı işçilerin sırtladığı taşlarla inşa edilmiş, saf Katalan Gotik mimarisinin en güzel örneği. Katedral/Gotik Mahalle durağınıza yürüme mesafesinde.",
-      extra:[
-        "🎫 Giriş: Belirli saatlerde TAMAMEN ÜCRETSİZ (Pzt-Cmt 09:00-13:00 ve 17:00-20:30 / Pazar 09:00-13:00 ve 17:00 sonrası)",
-        "💳 Fiyat: Diğer saatlerde müze+kript €5, kule+çatı dahil €10 (10 yaş altı ücretsiz)",
-        "📱 Bilet: Kapıda alınır, rezervasyon gerekmez"
       ] },
     { id:"d3-3", day:3, time:"Sadece dıştan yeterli", name:"Palau Güell", lat:41.3787, lng:2.1734,
       category:"yapi",
@@ -611,7 +656,11 @@
     { id:"d3-24", day:3, time:"Pazar sabahları", name:"Mercat de Sant Antoni", lat:41.3765, lng:2.1616,
       category:"etkinlik",
       note:"Boqueria'ya alternatif, yerel halkın günlük alışverişini yaptığı kapalı pazar; Pazar sabahları ayrıca nostaljik kitap/plak/kartpostal pazarı kurulur.",
-      extra:["📅 Pazar sabahları (kitap pazarı), hafta içi her gün (genel pazar)","💶 Giriş ücretsiz"] }
+      extra:["📅 Pazar sabahları (kitap pazarı), hafta içi her gün (genel pazar)","💶 Giriş ücretsiz"] },
+    { id:"d3-25", day:3, time:"Sadece Per/Cum/Cmt akşamı", name:"Magic Fountain Montjuïc", lat:41.3711603, lng:2.1517402,
+      category:"etkinlik",
+      note:"Montjuïc'teki ışık-su-müzik gösterisi; ne yazık ki bu ziyaretinize denk gelmiyor (bugün Pazar, yarın Pazartesi çalışmıyor). İleride tekrar gelirseniz mutlaka görün.",
+      extra:["📅 Sadece Perşembe/Cuma/Cumartesi akşamları","💶 Tamamen ücretsiz gösteri","🚫 Bu ziyaretinizde çalışmıyor"] }
   ];
 
   // Her günün kendi listesindeki sırasına göre sabit duraç numarası ata
@@ -722,7 +771,7 @@
   function matchesFilter(stop){
     if(state.filter === "all") return true;
     if(state.filter === "halal" || state.filter === "yemek") return stop.category === "yemek";
-    if(state.filter === "gezi") return ["gezi","muze","pazar"].indexOf(stop.category) !== -1;
+    if(state.filter === "gezi") return ["gezi","muze","pazar","yapi"].indexOf(stop.category) !== -1;
     if(state.filter === "dis") return ["plaj","yuruyus","opsiyonel"].indexOf(stop.category) !== -1;
     if(state.filter === "yapi") return stop.category === "yapi";
     if(state.filter === "lezzet") return stop.category === "lezzet";
@@ -787,12 +836,30 @@
     wrap.innerHTML = "";
     var visible = getVisibleStops();
 
+    if(DAY_INFO[state.day]){
+      var banner = document.createElement("div");
+      banner.className = "day-banner";
+      banner.innerHTML = DAY_INFO[state.day];
+      wrap.appendChild(banner);
+    }
+
     if(visible.length === 0){
-      wrap.innerHTML = '<div class="empty-msg">Bu filtreyle eşleşen durak yok 🙁</div>';
+      var empty = document.createElement("div");
+      empty.className = "empty-msg";
+      empty.textContent = "Bu filtreyle eşleşen durak yok 🙁";
+      wrap.appendChild(empty);
       return;
     }
 
+    var lastZone = null;
     visible.forEach(function(stop){
+      if(stop.zone && stop.zone !== lastZone){
+        lastZone = stop.zone;
+        var zoneDiv = document.createElement("div");
+        zoneDiv.className = "zone-header";
+        zoneDiv.innerHTML = "📍 " + stop.zone + (ZONE_INFO[stop.zone] ? '<div class="zone-sub">' + ZONE_INFO[stop.zone] + "</div>" : "");
+        wrap.appendChild(zoneDiv);
+      }
       var card = document.createElement("div");
       card.className = "card" + (stop.id === state.activeId ? " active" : "") + (state.completed[stop.id] ? " done" : "");
       card.dataset.id = stop.id;
@@ -923,8 +990,9 @@
 
   var LEGEND_HTML = {
     1: '<span><i class="dot" style="background:#2E6F95"></i> Gezi / Müze</span>' +
+       '<span><i class="dot" style="background:#6C5CE7"></i> Yapı</span>' +
        '<span><i class="dot" style="background:#3F8F5F"></i> Helal Restoran</span>' +
-       '<span><i class="dot" style="background:#EA9A3E"></i> Plaj / Dış Mekân</span>' +
+       '<span><i class="dot" style="background:#C2478B"></i> Lezzet / Kafe</span>' +
        '<span>✔️ Tamamlandı</span>',
     2: '<span><i class="dot" style="background:#2E6F95"></i> Gezi / Müze</span>' +
        '<span><i class="dot" style="background:#3F8F5F"></i> Helal Restoran</span>' +
@@ -935,6 +1003,18 @@
        '<span><i class="dot" style="background:#C2478B"></i> Lezzet / Kafe</span>' +
        '<span><i class="dot" style="background:#3F8F5F"></i> Helal Restoran</span>' +
        '<span><i class="dot" style="background:#D64550"></i> Etkinlik</span>'
+  };
+
+  var DAY_INFO = {
+    1: "☀️ <b>Bugün Pazar (6 Eylül)</b>, saat 16:21 itibarıyla plan yapıyoruz. Boqueria pazarı bugün kapalı olduğu için programda yok. Aşağıdaki duraklar birbirine yürüme mesafesinde — kesin bir sıra değil, canınız nasıl isterse öyle gezin.",
+    2: "📅 <b>Yarın Pazartesi (7 Eylül)</b> — La Pedrera'nın içi ve Picasso Müzesi haftalık kapanış günü olduğu için kapalı; Montjuïc'teki Sihirli Çeşme de sadece Per/Cum/Cmt çalıştığından programda yok (Keşfet sekmesinde not olarak duruyor). İki bölgeye ayrılmış öneriler aşağıda, hepsini yapmak zorunda değilsiniz.",
+    3: "💡 Bu sekmedeki yerler zorunlu değil; vaktiniz/enerjiniz kalırsa göz atabileceğiniz ekstra öneriler."
+  };
+
+  var ZONE_INFO = {
+    "Eski Şehir & Born (Rahat Akşam Turu)": "Hepsi birbirine yürüme mesafesinde, sırayı istediğiniz gibi değiştirebilirsiniz.",
+    "Gaudí & Eixample (Sabah → Öğleden Sonra)": "Park Güell biraz uzakta (metro ile); Sagrada Família ile Passeig de Gràcia arası birbirine yakın.",
+    "Eski Şehir Tamamlama & Deniz (Akşamüstü → Akşam)": "Boqueria La Rambla üzerinde; plaj ve akşam yemeği deniz kenarında birbirine yakın."
   };
 
   function renderChips(){
