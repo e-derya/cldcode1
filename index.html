@@ -278,6 +278,29 @@
   .food-badge.halal-full{ background:#DCF0E4; color:#2C7148; }
   .food-badge.no-alcohol{ background:#EAF3F8; color:var(--blue); }
   .food-badge.has-alcohol{ background:#FBEAE7; color:var(--red); }
+  .food-badge.ask-halal{ background:#FBF0DE; color:#95611A; }
+
+  .pick-ribbon{
+    display:inline-block;
+    background:linear-gradient(135deg,#F2C94C,#D4A017);
+    color:#3A2E10;
+    font-size:.78rem;
+    font-weight:800;
+    padding:4px 10px;
+    border-radius:8px;
+    margin-bottom:8px;
+  }
+  .extra-info{
+    margin-top:8px;
+    background:var(--sand-dark);
+    border-radius:10px;
+    padding:8px 10px;
+  }
+  .extra-row{
+    font-size:.83rem;
+    color:#5c4f47;
+    padding:2px 0;
+  }
 
   .card-actions{
     display:flex;
@@ -352,6 +375,7 @@
   }
   .pin-badge.halal{ background:var(--green); top:-3px; right:-1px; }
   .pin-badge.alcohol{ background:var(--red); bottom:2px; right:-4px; }
+  .pin-badge.pick{ background:#D4A017; top:-3px; left:-1px; }
   .pin-wrap.done .pin-circle{ filter:grayscale(.6) brightness(1.15); }
 
   .leaflet-popup-content{ font-size:.95rem; line-height:1.4; min-width:180px; }
@@ -372,10 +396,11 @@
 
 <header>
   <h1>🇪🇸 Barcelona Aile Gezisi</h1>
-  <p class="sub">2 günlük gezi planı · durakları takip et, yol tarifi al</p>
+  <p class="sub">2 günlük gezi planı + keşif rehberi · durakları takip et, yol tarifi al</p>
   <div class="day-tabs">
     <button class="day-tab active" data-day="1">1. Gün<small>Gaudí Rotası</small></button>
     <button class="day-tab" data-day="2">2. Gün<small>Eski Şehir + Deniz</small></button>
+    <button class="day-tab" data-day="3">Keşfet<small>Vaktiniz Olursa</small></button>
   </div>
 </header>
 
@@ -391,12 +416,7 @@
   </div>
 </div>
 
-<div class="legend">
-  <span><i class="dot" style="background:#2E6F95"></i> Gezi / Müze</span>
-  <span><i class="dot" style="background:#3F8F5F"></i> Helal Restoran</span>
-  <span><i class="dot" style="background:#EA9A3E"></i> Plaj / Dış Mekân</span>
-  <span>✔️ Tamamlandı</span>
-</div>
+<div class="legend" id="legend"></div>
 
 <main>
   <div class="map-wrap"><div id="map"></div></div>
@@ -414,54 +434,212 @@
   var STOPS = [
     // GÜN 1 – Gaudí
     { id:"d1-1", day:1, time:"09:00", name:"Sagrada Família", lat:41.4036299, lng:2.1743558,
-      category:"gezi", note:"Online bilet şart, kapıda kuyruk uzun olabilir." },
+      category:"gezi",
+      note:"Dıştan izlemek bile başlı başına etkileyici ve ücretsizdir; farklı cephelerini (Doğuş & Tutku) görmek için 30-45 dk yeterli.",
+      extra:[
+        "🎫 Giriş: Dış cepheyi görmek ücretsiz; içeri girmek ücretlidir",
+        "💳 Fiyat: Sesli rehberli temel giriş ~€26, kule çıkışlı ~€36, rehberli tur €30-40; 11 yaş altı ücretsiz, Barcelona sakinlerine %50 indirim",
+        "📱 Bilet: SADECE online satılıyor, saatli giriş — 2026'da Gaudí'nin 100. yılı nedeniyle günler öncesinden tükenebiliyor"
+      ] },
     { id:"d1-2", day:1, time:"11:30", name:"Aladdin Restaurant", lat:41.4086611, lng:2.1745222,
       category:"yemek", note:"Lübnan mutfağı.", halal:"full", alcohol:false, cuisine:"Lübnan" },
     { id:"d1-3", day:1, time:"14:00", name:"Park Güell", lat:41.4144948, lng:2.1526945,
-      category:"gezi", note:"Monumental Zone bileti gerekli, önceden alınmalı." },
+      category:"gezi",
+      note:"Genel park alanları ücretsiz gezilir; sadece mozaikli teraslar ve ejderha heykelinin bulunduğu 'Monumental Zone' ücretli ve saatli bilet gerektirir.",
+      extra:[
+        "🎫 Giriş: Park geneli ÜCRETSİZ, sadece Monumental Zone ücretli",
+        "💳 Fiyat: Yetişkin €18, çocuk (7-12)/65 yaş üstü €13.50, 7 yaş altı ücretsiz (yine de bilet gerekli)",
+        "📱 Bilet: Online, saatlik kontenjan var (1400 kişi/saat) — özellikle öğleden sonrası için önceden alın"
+      ] },
     { id:"d1-4", day:1, time:"17:30", name:"Casa Batlló", lat:41.3917, lng:2.164918,
-      category:"gezi", note:"Gaudí'nin ünlü cephe eseri, fotoğraf molası." },
+      category:"gezi",
+      note:"Gaudí'nin ünlü 'kemik cephesi'; akşamüstü ışığında dıştan fotoğraflamak bile deneyimin büyük kısmını verir.",
+      extra:[
+        "🎫 Giriş: Dış cephe ücretsiz görülür; içeri girmek ücretli",
+        "💳 Fiyat: Online €29'dan başlıyor (temel bilet), çatı katı için üst seviye bilet gerekir; gişede €4-15 daha pahalı",
+        "📱 Bilet: Online hızlıca alınabilir, saatli giriş"
+      ] },
     { id:"d1-5", day:1, time:"19:00", name:"La Pedrera – Casa Milà", lat:41.3952155, lng:2.1619024,
-      category:"gezi", note:"Pazartesi günleri kapalı." },
+      category:"gezi",
+      note:"Dalgalı taş cephesi ve demir balkonlarıyla ünlü; Pazartesi günleri kapalı.",
+      extra:[
+        "🎫 Giriş: Dış cephe ücretsiz; içeri girmek ücretli",
+        "💳 Fiyat: Essential bilet online €25, normal €29; 12 yaş altı ücretsiz",
+        "📱 Bilet: Online alınabilir; bacalı çatı terası için ayrıca gün batımı/gece turu da var (ekstra ücretli)"
+      ] },
 
     // GÜN 2 – Eski Şehir + Deniz
     { id:"d2-1", day:2, time:"09:30", name:"Mercat de la Boqueria", lat:41.3817399, lng:2.1715853,
-      category:"pazar", note:"Renkli pazar; pazar günü kapalı." },
+      category:"pazar", note:"Renkli pazar; pazar günü kapalı.",
+      extra:["🎫 Giriş: Ücretsiz, sadece aldığınız ürünler için ödenir","💡 Taze meyve suyu ve tapas standları kahvaltı/atıştırmalık için ideal"] },
     { id:"d2-2", day:2, time:"10:45", name:"La Rambla", lat:41.3856087, lng:2.1698166,
       category:"yuruyus", note:"Yankesiciye dikkat, çantalar önde tutulmalı." },
     { id:"d2-3", day:2, time:"12:30", name:"Paloma Blanca", lat:41.3796, lng:2.167237,
       category:"yemek", note:"Fas mutfağı, balık/paella önerilir.", halal:"full", alcohol:false, cuisine:"Fas" },
     { id:"d2-4", day:2, time:"14:00", name:"Katedral / Gotik Mahalle", lat:41.383962, lng:2.1761991,
-      category:"gezi", note:"Dar sokaklarda keyifli bir yürüyüş." },
+      category:"gezi",
+      note:"Dar sokaklarda keyifli bir yürüyüş; dış avlu ve cephe çoğu ziyaretçi için yeterlidir.",
+      extra:[
+        "🎫 Giriş: İbadet saatlerinde (~09:30 öncesi/17:30 sonrası, Pzt-Cmt) ücretsiz; turist ziyaret saatlerinde (09:30-18:30) ücretli",
+        "💳 Fiyat: Turist bileti €16 (öğrenci/geniş aile €14)",
+        "👀 Öneri: Sadece dış avluyu ve cepheyi görmek çoğu aile için yeterli, içeri girmeye gerek yok"
+      ] },
     { id:"d2-5", day:2, time:"15:30", name:"Picasso Müzesi", lat:41.3852706, lng:2.1809472,
-      category:"muze", note:"Pazartesi günleri kapalı." },
+      category:"muze",
+      note:"Genç Picasso'nun eserlerine odaklanan müze; Pazartesi günleri kapalı. Aile için 'içeri girip tarih öğrenilecek' iyi bir seçenek.",
+      extra:[
+        "🎫 Giriş: Ücretli (ayın ilk Pazarı ücretsiz, ama rezervasyon şart)",
+        "💳 Fiyat: Tam bilet €14 online / €15 gişede; indirimli (18-25, 65+, öğrenci) €7.50",
+        "📱 Bilet: Online saatli bilet önerilir; ücretsiz Pazar biletleri 4 gün önce saat 10:00'da açılıyor ve saatler içinde tükeniyor"
+      ] },
     { id:"d2-6", day:2, time:"17:30", name:"Barceloneta Plajı", lat:41.3783713, lng:2.1924685,
-      category:"plaj", note:"Gün batımına doğru dinlenme molası." },
+      category:"plaj", note:"Gün batımına doğru dinlenme molası.",
+      extra:["🎫 Giriş: Tamamen ücretsiz, halka açık plaj"] },
     { id:"d2-7", day:2, time:"20:00", name:"La Lolita", lat:41.388977, lng:2.1657512,
       category:"yemek", note:"Deniz paellası önerilir.", halal:"partial", alcohol:true, cuisine:"Akdeniz" },
     { id:"d2-8", day:2, time:"21:30", name:"Magic Fountain Montjuïc", lat:41.3711603, lng:2.1517402,
-      category:"opsiyonel", note:"Sadece Perşembe/Cuma/Cumartesi günleri çalışır. Opsiyonel." }
+      category:"opsiyonel", note:"Sadece Perşembe/Cuma/Cumartesi günleri çalışır. Opsiyonel.",
+      extra:["🎫 Giriş: Tamamen ücretsiz gösteri"] },
+
+    // KEŞFET – Görülmeye değer yapılar
+    { id:"d3-1", day:3, time:"Rehberli tur ~50dk", name:"Palau de la Música Catalana", lat:41.3875, lng:2.1751,
+      category:"yapi", pick:true, pickLabel:"⭐ Girilmeye Değer Yapı #1",
+      note:"Dünyaca ünlü Modernista konser salonu; rengarenk vitray tavanı ve heykelli sahnesiyle UNESCO Dünya Mirası listesinde. Ailece içeri girip kısa bir rehberli turla tarihini öğrenebileceğiniz en iyi seçeneklerden biri.",
+      extra:[
+        "🎫 Giriş: Ücretli, sadece rehberli/kendi kendine turla girilir",
+        "💳 Fiyat: ~€24-27/kişi (50 dakikalık rehberli tur)",
+        "📱 Bilet: Resmi site veya GetYourGuide/Tiqets üzerinden online, saatli bilet — genelde aynı gün için de yer bulunabilir"
+      ] },
+    { id:"d3-2", day:3, time:"Ücretsiz saatlerde", name:"Basílica de Santa Maria del Mar", lat:41.3838, lng:2.1815,
+      category:"yapi", pick:true, pickLabel:"⭐ Girilmeye Değer Yapı #2 (Ücretsiz)",
+      note:"'Denizin Katedrali' olarak bilinir; limandaki taşıyıcı işçilerin sırtladığı taşlarla inşa edilmiş, saf Katalan Gotik mimarisinin en güzel örneği. Katedral/Gotik Mahalle durağınıza yürüme mesafesinde.",
+      extra:[
+        "🎫 Giriş: Belirli saatlerde TAMAMEN ÜCRETSİZ (Pzt-Cmt 09:00-13:00 ve 17:00-20:30 / Pazar 09:00-13:00 ve 17:00 sonrası)",
+        "💳 Fiyat: Diğer saatlerde müze+kript €5, kule+çatı dahil €10 (10 yaş altı ücretsiz)",
+        "📱 Bilet: Kapıda alınır, rezervasyon gerekmez"
+      ] },
+    { id:"d3-3", day:3, time:"Sadece dıştan yeterli", name:"Palau Güell", lat:41.3787, lng:2.1734,
+      category:"yapi",
+      note:"Gaudí'nin ilk büyük eserlerinden; dalgalı bacaları ve demir cepheli anıtsal kapısıyla ünlü.",
+      extra:["🎫 Giriş: Ücretli (11 yaş altı ücretsiz)","💳 Fiyat: Yaklaşık €12-14 (güncel fiyatı resmi siteden teyit edin)","👀 Öneri: Dış cepheyi ve çatı bacalarını dıştan görmek de yeterince etkileyici"] },
+    { id:"d3-4", day:3, time:"Sadece dıştan yeterli", name:"Casa Vicens", lat:41.4025, lng:2.1477,
+      category:"yapi",
+      note:"Gaudí'nin ilk büyük yapısı; rengarenk seramik karolar ve Fas/Osmanlı esintili desenlerle dikkat çeker, Gràcia mahallesinde.",
+      extra:["🎫 Giriş: Ücretli","💳 Fiyat: ~€24/kişi (oldukça pahalı bir giriş ücreti)","👀 Öneri: Gràcia'da yürürken dış cepheyi görmek yeterli, içeri girmeye gerek yok"] },
+    { id:"d3-5", day:3, time:"Sadece dıştan", name:"Hospital de Sant Pau", lat:41.4139, lng:2.1740,
+      category:"yapi",
+      note:"Domènech i Montaner'in Modernista başyapıtı; pavyonlar, kubbeler ve mozaiklerle süslü eski hastane kompleksi, UNESCO listesinde.",
+      extra:["🎫 Giriş: Dış avlu kısmen ücretsiz görülebilir; tam müze girişi ücretli","💳 Fiyat: €17","👀 Öneri: Sagrada Família'ya giderken güzergahta, dıştan görmek yeterli"] },
+    { id:"d3-6", day:3, time:"Ücretsiz", name:"Arc de Triomf", lat:41.3910, lng:2.1808,
+      category:"yapi",
+      note:"1888 Dünya Fuarı'nın anıtsal tuğla giriş kapısı; kabartmalarıyla dikkat çeker.",
+      extra:["🎫 Giriş: Tamamen ücretsiz","📍 Ciutadella Parkı'na yürüme mesafesinde"] },
+    { id:"d3-7", day:3, time:"Ücretsiz", name:"Ciutadella Parkı & Cascada Çeşmesi", lat:41.3888, lng:2.1873,
+      category:"yapi",
+      note:"Genç Gaudí'nin de katkı verdiği görkemli Cascada çeşmesi, gölde kürek botu, geniş yeşil alanlar; ailece dinlenmek için ideal.",
+      extra:["🎫 Giriş: Park tamamen ücretsiz","🚣 Kürek botu kiralama isteğe bağlı ve ücretlidir"] },
+    { id:"d3-8", day:3, time:"Ücretsiz, gün batımı önerilir", name:"Bunkers del Carmel", lat:41.4193, lng:2.1502,
+      category:"yapi",
+      note:"Şehrin 360° ücretsiz en iyi manzarası, özellikle gün batımında. Alfons X metrosundan ~20-25 dk yokuş yukarı yürüyüş gerektirir.",
+      extra:["🎫 Giriş: Tamamen ücretsiz","⏰ Gece girişine kapatılıyor (~19:30 civarı)","🥾 Yokuş dik, rahat ayakkabı önerilir"] },
+    { id:"d3-9", day:3, time:"Sadece dıştan / gece", name:"Torre Agbar", lat:41.4036, lng:2.1897,
+      category:"yapi",
+      note:"Jean Nouvel imzalı, gece renkli ışıklarla aydınlanan modern kule; sadece dıştan fotoğraf durağı.",
+      extra:["🎫 Giriş: Halka açık değil, sadece dıştan görülür","🌃 Gece ışıklandırması gündüzden daha etkileyici"] },
+    { id:"d3-10", day:3, time:"Kale avlusu ücretsiz", name:"Montjuïc Kalesi", lat:41.3633, lng:2.1656,
+      category:"yapi",
+      note:"Liman ve şehir manzaralı eski kale; teleferikle çıkış manzaralı ama ücretli.",
+      extra:["🎫 Giriş: Kale avlusu ücretsiz, iç sergi alanı küçük ücretli","🚡 Teleferik ~€14 (gidiş-dönüş), alternatif olarak otobüsle ücretsiz/ucuz çıkış da mümkün"] },
+
+    // KEŞFET – Tatlı & Kafe
+    { id:"d3-11", day:3, time:"Kahvaltı/İkindi", name:"Granja M. Viader", lat:41.3809, lng:2.1698,
+      category:"lezzet",
+      note:"1870'den beri açık, Barcelona'nın en eski 'granja'larından (süt/tatlı dükkanı). Efsanevi kalın sıcak çikolata ve kremalı 'suís' burada denenir.",
+      extra:["🍮 Denenecekler: Xocolata amb melindros, crema catalana, mel i mató (bal-lor peyniri)","💰 Kişi başı ~€4-8","🥛 Süt/tatlı ağırlıklı, alkol yok — helal dostu"] },
+    { id:"d3-12", day:3, time:"Her saat", name:"Pastisseria Escribà", lat:41.3806, lng:2.1734,
+      category:"lezzet",
+      note:"La Rambla üzerinde 19. yüzyıldan kalma ikonik pastane; klasik ve yaratıcı tatlılarıyla ünlü.",
+      extra:["🍮 Denenecekler: Turrón, xuixo, özel çikolatalar","💰 Parça başı ~€3-6"] },
+    { id:"d3-13", day:3, time:"Her saat", name:"Hofmann Pastisseria", lat:41.3860, lng:2.1810,
+      category:"lezzet",
+      note:"El Born'da ödüllü kruvasanlarıyla ünlü, yerel halkın da tercih ettiği butik pastane.",
+      extra:["🍮 Denenecekler: Kruvasan çeşitleri, mevsimlik hamur işleri","💰 ~€2-5"] },
+    { id:"d3-14", day:3, time:"Öğleden sonra", name:"Caelum", lat:41.3830, lng:2.1745,
+      category:"lezzet",
+      note:"İspanya manastırlarında rahibe/keşişlerin yaptığı geleneksel tatlıları sunan atmosferik bir çay salonu; altında ortaçağdan kalma hamam kalıntıları var.",
+      extra:["🍮 Denenecekler: Manastır tatlıları, bademli kurabiyeler, bal ürünleri","💰 ~€5-9"] },
+    { id:"d3-15", day:3, time:"Sıcak günlerde", name:"El Tio Che", lat:41.3757, lng:2.1907,
+      category:"lezzet",
+      note:"1912'den beri orxata (badem/chufa sütü içeceği) ve dondurma ustası; Barceloneta plajı durağınıza çok yakın.",
+      extra:["🥤 Denenecekler: Orxata, granizado (buzlu meyve içeceği)","💰 ~€3-5","🥛 Alkol yok, bitkisel/sütlü içecekler — helal dostu"] },
+
+    // KEŞFET – Ek helal / helale yakın restoranlar
+    { id:"d3-16", day:3, time:"Öğle/Akşam", name:"Ziryab", lat:41.3859, lng:2.1811,
+      category:"yemek", halal:"full", alcohol:false, cuisine:"Akdeniz Füzyon",
+      note:"Tamamen helal; İspanyol-Fas-Levanten mutfaklarını harmanlıyor. Deniz ürünlü paella ve meze tabakları öne çıkıyor.",
+      extra:["💰 Ana yemekler ~€14'ten başlıyor","📍 El Born, Picasso Müzesi'ne yürüme mesafesinde"] },
+    { id:"d3-17", day:3, time:"Öğle/Akşam", name:"Mosty Restaurant", lat:41.3921, lng:2.1610,
+      category:"yemek", halal:"full", alcohol:false, cuisine:"İspanyol",
+      note:"Helal sertifikalı İspanyol mutfağı; levrek, deniz ürünlü paella gibi klasik lezzetler sunuyor.",
+      extra:["💰 Orta-üst segment fiyat aralığı"] },
+    { id:"d3-18", day:3, time:"Öğle/Akşam", name:"Arabia Restaurant", lat:41.3809, lng:2.1731,
+      category:"yemek", halal:"full", alcohol:false, cuisine:"İspanyol/Akdeniz",
+      note:"La Rambla üzerinde, sunduğu tüm etler helal; paella dahil geniş bir İspanyol/Akdeniz menüsü var.",
+      extra:["📍 La Rambla üzerinde, turistik ama pratik bir seçenek"] },
+    { id:"d3-19", day:3, time:"Öğle/Akşam", name:"Can Solé", lat:41.3799, lng:2.1889,
+      category:"yemek", halal:"ask", alcohol:true, cuisine:"İspanyol/Katalan (Deniz Ürünleri)",
+      note:"1903'ten beri Barceloneta'da; klasik İspanyol/Katalan balık ve paella restoranı.",
+      extra:["⚠️ Helal sertifikalı DEĞİL — sipariş verirken 'sin alcohol, sin vino, sin cerdo' (alkolsüz/şarapsız/domuzsuz) diye belirtin","🐟 Önerilen: Fideuà, ızgara balık çeşitleri","💰 Orta-üst segment"] },
+    { id:"d3-20", day:3, time:"Öğle/Akşam", name:"La Mar Salada", lat:41.3782, lng:2.1897,
+      category:"yemek", halal:"ask", alcohol:true, cuisine:"İspanyol/Katalan (Deniz Ürünleri)",
+      note:"Barceloneta plajına yakın, taze balık ve deniz ürünü ağırlıklı samimi bir lokanta.",
+      extra:["⚠️ Helal sertifikalı DEĞİL — şarapsız/domuzsuz hazırlanabilecek deniz ürünü yemeklerini tercih edip mutlaka sorun","🐟 Önerilen: Suquet de peix (balık güveç), ızgara ahtapot","💰 Orta segment"] },
+
+    // KEŞFET – Etkinlik / Fuar
+    { id:"d3-21", day:3, time:"23-27 Eylül 2026", name:"La Mercè Festivali", lat:41.3826, lng:2.1765,
+      category:"etkinlik",
+      note:"Barcelona'nın en büyük şehir festivali: dev insan kuleleri (castells), kukla dev figürlerin (gegants) geçidi, ateşli 'correfoc' gösterisi ve ücretsiz açık hava konserleri. 24 Eylül resmi tatildir.",
+      extra:["📅 23-27 Eylül 2026","💶 Etkinliklerin çoğu ücretsiz","⚠️ ÖNEMLİ: Gezi tarihleriniz bu döneme denk gelebilir — otel/ulaşım yoğun olabilir, güncel programı barcelona.cat/lamerce adresinden kontrol edin"] },
+    { id:"d3-22", day:3, time:"Kasım sonu - 23 Aralık", name:"Fira de Santa Llúcia (Noel Pazarı)", lat:41.3839, lng:2.1762,
+      category:"etkinlik",
+      note:"Katedral meydanında kurulan, 1786'dan beri her yıl tekrarlanan geleneksel Noel pazarı; el sanatları, süsler ve yöresel ürünler satılır.",
+      extra:["📅 Her yıl Kasım sonu - 23 Aralık arası","💶 Giriş ücretsiz, sadece ürünler ücretli"] },
+    { id:"d3-23", day:3, time:"~15-21 Ağustos", name:"Festes de Gràcia", lat:41.4036, lng:2.1567,
+      category:"etkinlik",
+      note:"Gràcia mahallesi sakinlerinin sokaklarını temalı dekorasyonlarla süslediği renkli mahalle festivali; canlı müzik ve sokak partileri olur.",
+      extra:["📅 Genelde 15-21 Ağustos arası (her yıl)","💶 Giriş ücretsiz"] },
+    { id:"d3-24", day:3, time:"Pazar sabahları", name:"Mercat de Sant Antoni", lat:41.3765, lng:2.1616,
+      category:"etkinlik",
+      note:"Boqueria'ya alternatif, yerel halkın günlük alışverişini yaptığı kapalı pazar; Pazar sabahları ayrıca nostaljik kitap/plak/kartpostal pazarı kurulur.",
+      extra:["📅 Pazar sabahları (kitap pazarı), hafta içi her gün (genel pazar)","💶 Giriş ücretsiz"] }
   ];
 
-  // Her günün kendi kronolojik sırasına göre sabit duraç numarası ata
-  [1,2].forEach(function(d){
-    STOPS.filter(function(s){ return s.day===d; })
-         .sort(function(a,b){ return a.time.localeCompare(b.time); })
-         .forEach(function(s, i){ s.order = i+1; });
-  });
+  // Her günün kendi listesindeki sırasına göre sabit duraç numarası ata
+  (function assignOrder(){
+    var counters = {};
+    STOPS.forEach(function(s){
+      counters[s.day] = (counters[s.day] || 0) + 1;
+      s.order = counters[s.day];
+    });
+  })();
 
   var CAT_LABEL = {
     gezi:"Gezi", muze:"Müze", yemek:"Yemek", plaj:"Plaj",
-    yuruyus:"Yürüyüş", pazar:"Pazar", opsiyonel:"Opsiyonel"
+    yuruyus:"Yürüyüş", pazar:"Pazar", opsiyonel:"Opsiyonel",
+    yapi:"Yapı", lezzet:"Lezzet/Kafe", etkinlik:"Etkinlik"
   };
   var CAT_ICON = {
     gezi:"🏛️", muze:"🖼️", yemek:"🍽️", plaj:"🏖️",
-    yuruyus:"🚶", pazar:"🛒", opsiyonel:"✨"
+    yuruyus:"🚶", pazar:"🛒", opsiyonel:"✨",
+    yapi:"🏰", lezzet:"🍰", etkinlik:"🎉"
   };
 
   function categoryColor(cat){
     if(cat==="yemek") return "#3F8F5F";
     if(cat==="plaj" || cat==="yuruyus" || cat==="opsiyonel") return "#EA9A3E";
+    if(cat==="yapi") return "#6C5CE7";
+    if(cat==="lezzet") return "#C2478B";
+    if(cat==="etkinlik") return "#D64550";
     return "#2E6F95";
   }
 
@@ -500,18 +678,22 @@
     var done = !!state.completed[stop.id];
     var halalBadge = "";
     var alcoholBadge = "";
-    if(stop.category === "yemek"){
+    var pickBadge = "";
+    if(stop.category === "yemek" && stop.halal !== "ask"){
       halalBadge = '<div class="pin-badge halal">H</div>';
-      if(stop.alcohol){
-        alcoholBadge = '<div class="pin-badge alcohol">A</div>';
-      }
+    }
+    if(stop.category === "yemek" && stop.alcohol){
+      alcoholBadge = '<div class="pin-badge alcohol">A</div>';
+    }
+    if(stop.pick){
+      pickBadge = '<div class="pin-badge pick">★</div>';
     }
     var num = done ? "✓" : stop.order;
     var scale = isActive ? "transform:scale(1.15);" : "";
     var html =
       '<div class="pin-wrap' + (done ? " done" : "") + '" style="' + scale + '">' +
         '<div class="pin-circle" style="background:' + color + '"><span>' + num + '</span></div>' +
-        halalBadge + alcoholBadge +
+        halalBadge + alcoholBadge + pickBadge +
       '</div>';
     return L.divIcon({ html: html, className: "", iconSize:[38,38], iconAnchor:[19,34], popupAnchor:[0,-30] });
   }
@@ -519,12 +701,18 @@
   function popupHtml(stop){
     var html = '<div><span class="popup-time">' + stop.time + '</span><br><b>' + stop.name + '</b>';
     html += '<div style="margin-top:4px;color:#5c4f47;">' + CAT_ICON[stop.category] + ' ' + CAT_LABEL[stop.category] + '</div>';
+    if(stop.pick){ html += '<div style="margin-top:4px;color:#95611A;font-weight:700;">' + stop.pickLabel + '</div>'; }
     if(stop.note){ html += '<div style="margin-top:4px;">' + stop.note + '</div>'; }
     if(stop.category === "yemek"){
       html += '<div style="margin-top:6px;font-size:.85rem;">';
-      html += stop.halal === "full" ? "✅ Tam helal" : "🍽️ Helal mutfak";
+      if(stop.halal === "full") html += "✅ Tam helal";
+      else if(stop.halal === "ask") html += "⚠️ Helal sertifikalı değil, sorarak sipariş verin";
+      else html += "🍽️ Helal mutfak";
       html += stop.alcohol ? " · 🍷 Mekanda alkol var" : " · 🚫 Alkolsüz";
       html += "</div>";
+    }
+    if(stop.extra && stop.extra.length){
+      html += '<div style="margin-top:6px;font-size:.82rem;color:#5c4f47;">' + stop.extra.join("<br>") + '</div>';
     }
     html += '<div style="margin-top:8px;"><a href="' + appleMapsUrl(stop) + '" target="_blank" rel="noopener">📍 Yol Tarifi Al</a></div>';
     return html;
@@ -533,9 +721,12 @@
   // ---------- FILTER / SEARCH ----------
   function matchesFilter(stop){
     if(state.filter === "all") return true;
-    if(state.filter === "halal") return stop.category === "yemek";
+    if(state.filter === "halal" || state.filter === "yemek") return stop.category === "yemek";
     if(state.filter === "gezi") return ["gezi","muze","pazar"].indexOf(stop.category) !== -1;
     if(state.filter === "dis") return ["plaj","yuruyus","opsiyonel"].indexOf(stop.category) !== -1;
+    if(state.filter === "yapi") return stop.category === "yapi";
+    if(state.filter === "lezzet") return stop.category === "lezzet";
+    if(state.filter === "etkinlik") return stop.category === "etkinlik";
     return true;
   }
   function matchesSearch(stop){
@@ -549,7 +740,7 @@
     return STOPS.filter(function(s){ return s.day === state.day; })
                 .filter(matchesFilter)
                 .filter(matchesSearch)
-                .sort(function(a,b){ return a.time.localeCompare(b.time); });
+                .sort(function(a,b){ return a.order-b.order; });
   }
 
   // ---------- RENDER ----------
@@ -609,16 +800,30 @@
       var badges = "";
       if(stop.category === "yemek"){
         badges += '<div class="badges-row">';
-        badges += stop.halal === "full"
-          ? '<span class="food-badge halal-full">✅ Tam Helal</span>'
-          : '<span class="food-badge halal">🍽️ Helal Mutfak</span>';
+        if(stop.halal === "full"){
+          badges += '<span class="food-badge halal-full">✅ Tam Helal</span>';
+        } else if(stop.halal === "ask"){
+          badges += '<span class="food-badge ask-halal">⚠️ Sertifikalı Değil, Sorarak Sipariş Verin</span>';
+        } else {
+          badges += '<span class="food-badge halal">🍽️ Helal Mutfak</span>';
+        }
         badges += stop.alcohol
           ? '<span class="food-badge has-alcohol">🍷 Mekanda Alkol Var</span>'
           : '<span class="food-badge no-alcohol">🚫 Alkolsüz</span>';
         badges += "</div>";
       }
 
+      var extraHtml = "";
+      if(stop.extra && stop.extra.length){
+        extraHtml = '<div class="extra-info">' + stop.extra.map(function(line){
+          return '<div class="extra-row">' + line + '</div>';
+        }).join("") + '</div>';
+      }
+
+      var ribbon = stop.pick ? '<div class="pick-ribbon">' + stop.pickLabel + '</div>' : "";
+
       card.innerHTML =
+        ribbon +
         '<div class="card-top">' +
           '<div class="badge-num" style="background:' + categoryColor(stop.category) + '">' + stop.order + '</div>' +
           '<div class="card-title-wrap">' +
@@ -629,6 +834,7 @@
         '</div>' +
         (stop.note ? '<p class="card-note">' + stop.note + '</p>' : "") +
         badges +
+        extraHtml +
         '<div class="card-actions">' +
           '<a class="btn btn-route" href="' + appleMapsUrl(stop) + '" target="_blank" rel="noopener">🧭 Yol Tarifi</a>' +
           '<a class="btn btn-gmaps" href="' + googleMapsDirUrl(stop) + '" target="_blank" rel="noopener">G</a>' +
@@ -692,6 +898,59 @@
     }
   }
 
+  // ---------- SEKME BAŞINA FİLTRE / LEGEND ----------
+  var CHIP_SETS = {
+    1: [
+      { key:"all", label:"Tümü" },
+      { key:"halal", label:"🍽️ Helal Yemek" },
+      { key:"gezi", label:"🏛️ Geziler" },
+      { key:"dis", label:"🏖️ Plaj / Dış Mekân" }
+    ],
+    2: [
+      { key:"all", label:"Tümü" },
+      { key:"halal", label:"🍽️ Helal Yemek" },
+      { key:"gezi", label:"🏛️ Geziler" },
+      { key:"dis", label:"🏖️ Plaj / Dış Mekân" }
+    ],
+    3: [
+      { key:"all", label:"Tümü" },
+      { key:"yapi", label:"🏰 Yapılar" },
+      { key:"lezzet", label:"🍰 Lezzet & Kafe" },
+      { key:"yemek", label:"🍽️ Helal Yemek" },
+      { key:"etkinlik", label:"🎉 Etkinlikler" }
+    ]
+  };
+
+  var LEGEND_HTML = {
+    1: '<span><i class="dot" style="background:#2E6F95"></i> Gezi / Müze</span>' +
+       '<span><i class="dot" style="background:#3F8F5F"></i> Helal Restoran</span>' +
+       '<span><i class="dot" style="background:#EA9A3E"></i> Plaj / Dış Mekân</span>' +
+       '<span>✔️ Tamamlandı</span>',
+    2: '<span><i class="dot" style="background:#2E6F95"></i> Gezi / Müze</span>' +
+       '<span><i class="dot" style="background:#3F8F5F"></i> Helal Restoran</span>' +
+       '<span><i class="dot" style="background:#EA9A3E"></i> Plaj / Dış Mekân</span>' +
+       '<span>✔️ Tamamlandı</span>',
+    3: '<span><i class="dot" style="background:#6C5CE7"></i> Yapı (Dıştan)</span>' +
+       '<span>⭐ İçeri Girilmeye Değer</span>' +
+       '<span><i class="dot" style="background:#C2478B"></i> Lezzet / Kafe</span>' +
+       '<span><i class="dot" style="background:#3F8F5F"></i> Helal Restoran</span>' +
+       '<span><i class="dot" style="background:#D64550"></i> Etkinlik</span>'
+  };
+
+  function renderChips(){
+    var chips = CHIP_SETS[state.day] || CHIP_SETS[1];
+    var validKeys = chips.map(function(c){ return c.key; });
+    if(validKeys.indexOf(state.filter) === -1){ state.filter = "all"; }
+    var container = document.getElementById("filterChips");
+    container.innerHTML = chips.map(function(c){
+      return '<button class="chip' + (c.key === state.filter ? " active" : "") + '" data-filter="' + c.key + '">' + c.label + '</button>';
+    }).join("");
+  }
+
+  function renderLegend(){
+    document.getElementById("legend").innerHTML = LEGEND_HTML[state.day] || LEGEND_HTML[1];
+  }
+
   // ---------- EVENTS ----------
   document.querySelectorAll(".day-tab").forEach(function(tab){
     tab.addEventListener("click", function(){
@@ -699,17 +958,21 @@
       tab.classList.add("active");
       state.day = parseInt(tab.dataset.day, 10);
       state.activeId = null;
+      state.search = "";
+      document.getElementById("searchInput").value = "";
+      renderChips();
+      renderLegend();
       render();
     });
   });
 
-  document.querySelectorAll(".chip").forEach(function(chip){
-    chip.addEventListener("click", function(){
-      document.querySelectorAll(".chip").forEach(function(c){ c.classList.remove("active"); });
-      chip.classList.add("active");
-      state.filter = chip.dataset.filter;
-      render();
-    });
+  document.getElementById("filterChips").addEventListener("click", function(e){
+    var chip = e.target.closest(".chip");
+    if(!chip) return;
+    document.querySelectorAll(".chip").forEach(function(c){ c.classList.remove("active"); });
+    chip.classList.add("active");
+    state.filter = chip.dataset.filter;
+    render();
   });
 
   document.getElementById("searchInput").addEventListener("input", function(e){
@@ -718,6 +981,8 @@
   });
 
   // ---------- İLK YÜKLEME ----------
+  renderChips();
+  renderLegend();
   render();
 })();
 </script>
