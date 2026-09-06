@@ -205,6 +205,31 @@
     .list-wrap{ flex:1 1 50%; border-top:none; border-left:1px solid var(--line); }
   }
 
+  /* iPhone / dar telefon ekranları: üstteki alanı sıkıştır ki harita+liste görünür kalsın */
+  @media (max-width: 700px){
+    header{ padding:8px 10px 0 10px; }
+    header h1{ font-size:1.15rem; }
+    header p.sub{ display:none; }
+    .version-badge{ top:7px; right:8px; font-size:.6rem; padding:2px 5px; }
+    .day-tabs{ gap:4px; padding-bottom:7px; }
+    .day-tab{ padding:8px 2px; font-size:.76rem; min-height:40px; border-radius:9px 9px 0 0; }
+    .day-tab small{ font-size:.58rem; margin-top:1px; }
+
+    .toolbar{ padding:7px 8px; gap:6px; }
+    .search-box input{ padding:9px 12px 9px 32px; min-height:40px; font-size:.92rem; }
+    .search-box::before{ left:10px; font-size:.9rem; }
+    .filter-chips{ flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:2px; }
+    .chip{ padding:8px 12px; font-size:.8rem; min-height:38px; flex:0 0 auto; }
+
+    .legend{ flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; padding:6px 10px; gap:10px; font-size:.72rem; }
+    .legend span{ flex:0 0 auto; }
+
+    .map-wrap{ min-height:180px; }
+    .list-wrap{ padding:8px 8px 24px 8px; }
+    .zone-header{ font-size:.9rem; margin:12px 2px 6px 2px; }
+    .card{ padding:10px 12px; margin-bottom:10px; }
+  }
+
   .map-wrap{
     position:relative;
     flex:1 1 50%;
